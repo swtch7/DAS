@@ -20,8 +20,8 @@ export default function RedeemModal({ isOpen, onClose, userCredits }: RedeemModa
   const { toast } = useToast();
 
   const redeemMutation = useMutation({
-    mutationFn: async (data: { creditsToRedeem: number; cashAppUsername: string }) => {
-      await apiRequest("POST", "/api/credit-redeem", data);
+    mutationFn: async (data: { creditsToRedeem: number; description: string }) => {
+      await apiRequest("POST", "/api/redeem-credits", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
@@ -76,7 +76,7 @@ export default function RedeemModal({ isOpen, onClose, userCredits }: RedeemModa
 
     redeemMutation.mutate({
       creditsToRedeem: credits,
-      cashAppUsername: cashAppUsername.trim(),
+      description: `CashApp redemption for $${cashAppUsername.trim()}`,
     });
   };
 

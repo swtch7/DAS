@@ -449,6 +449,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Redeem credits
+  app.post('/api/redeem-credits', isAuthenticated, async (req: any, res) => {
+    try {
+      let userId: string;
+      
+      // Check if this is Google auth (has claims) or manual auth (direct user object)
+      if (req.user.claims) {
+        userId = req.user.claims.sub;
+      } else {
+        userId = req.user.id;
+      }
+      
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const { creditsToRedeem, description } = req.body;
+      
+      if (!creditsToRedeem || creditsToRedeem <= 0) {
+        return res.status(400).json({ message: "Invalid credits amount" });
+      }
+      
+      if (user.credits < creditsToRedeem) {
+        return res.status(400).json({ message: "Insufficient credits" });
+      }
+
+      // Create transaction record
+      const transactionData = {
+        userId: userId,
+        type: 'redeem' as const,
+        amount: -creditsToRedeem, // Negative for redemption
+        description: description || 'Credit redemption',
+        status: 'completed' as const,
+      };
+      
+      const transaction = await storage.createTransaction(transactionData);
+      
+      // Update user credits
+      const newCredits = user.credits - creditsToRedeem;
+      await storage.updateUserCredits(userId, newCredits);
+      
+      // Add to Google Sheets
+      try {
+        const sheetsClient = await getAuthenticatedSheetsClient();
+        const values = [
+          [
+            transaction.id.toString(),
+            'REDEEM', // Transaction type
+            user.firstName || '',
+            user.lastName || '',
+            user.email || '',
+            user.phone || '',
+            user.location || '',
+            creditsToRedeem.toString(),
+            '0.00', // No USD amount for redemption
+            description || 'Credit redemption',
+            new Date().toISOString(),
+          ]
+        ];
+        
+        console.log('Writing redemption to Google Sheets:', { spreadsheetId: SPREADSHEET_ID, values });
+        
+        const result = await sheetsClient.values.append({
+          spreadsheetId: SPREADSHEET_ID,
+          range: 'Cashapp!A:K',
+          valueInputOption: 'RAW',
+          insertDataOption: 'INSERT_ROWS',
+          requestBody: {
+            values,
+          },
+        });
+        
+        console.log('Google Sheets redemption write successful:', result.data);
+        
+      } catch (sheetsError) {
+        console.error("Error adding redemption to Google Sheets:", sheetsError);
+      }
+      
+      res.json({ 
+        success: true, 
+        transaction,
+        newCredits 
+      });
+      
+    } catch (error) {
+      console.error("Error redeeming credits:", error);
+      res.status(500).json({ message: "Failed to redeem credits" });
+    }
+  });
+
   // Get user transactions
   app.get('/api/transactions', isAuthenticated, async (req: any, res) => {
     try {
@@ -501,6 +593,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const values = [
           [
             request.id.toString(),
+            'BUY', // Transaction type
             user.firstName || '',
             user.lastName || '',
             user.email || '',
@@ -517,8 +610,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         const result = await sheetsClient.values.append({
           spreadsheetId: SPREADSHEET_ID,
-          range: 'Cashapp!A:J', // Use the correct sheet name (case sensitive)
+          range: 'Cashapp!A:K', // Start at column A and include transaction type
           valueInputOption: 'RAW',
+          insertDataOption: 'INSERT_ROWS', // Always append, never overwrite
           requestBody: {
             values,
           },
