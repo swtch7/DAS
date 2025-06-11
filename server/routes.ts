@@ -170,7 +170,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update user profile
   app.patch('/api/user/profile', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      let userId: string;
+      
+      // Check if this is Google auth (has claims) or manual auth (direct user object)
+      if (req.user.claims) {
+        userId = req.user.claims.sub;
+      } else {
+        userId = req.user.id;
+      }
+      
       const { phone, location } = req.body;
       
       const user = await storage.getUser(userId);
@@ -194,7 +202,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Generate and send game credentials
   app.post('/api/user/game-credentials', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      let userId: string;
+      
+      // Check if this is Google auth (has claims) or manual auth (direct user object)
+      if (req.user.claims) {
+        userId = req.user.claims.sub;
+      } else {
+        userId = req.user.id;
+      }
+      
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -226,7 +242,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user transactions
   app.get('/api/transactions', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      let userId: string;
+      
+      // Check if this is Google auth (has claims) or manual auth (direct user object)
+      if (req.user.claims) {
+        userId = req.user.claims.sub;
+      } else {
+        userId = req.user.id;
+      }
+      
       const transactions = await storage.getUserTransactions(userId);
       res.json(transactions);
     } catch (error) {
@@ -238,7 +262,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create credit purchase request
   app.post('/api/credit-purchase', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      let userId: string;
+      
+      // Check if this is Google auth (has claims) or manual auth (direct user object)
+      if (req.user.claims) {
+        userId = req.user.claims.sub;
+      } else {
+        userId = req.user.id;
+      }
+      
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -299,7 +331,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Process credit redemption
   app.post('/api/credit-redeem', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      let userId: string;
+      
+      // Check if this is Google auth (has claims) or manual auth (direct user object)
+      if (req.user.claims) {
+        userId = req.user.claims.sub;
+      } else {
+        userId = req.user.id;
+      }
+      
       const { creditsToRedeem, cashAppUsername } = req.body;
       
       const user = await storage.getUser(userId);
