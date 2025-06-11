@@ -7,6 +7,8 @@ import { useAuth } from "@/hooks/useAuth";
 import Dashboard from "@/pages/dashboard";
 import Landing from "@/pages/landing";
 import Profile from "@/pages/profile";
+import Login from "@/pages/login";
+import Register from "@/pages/register";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -23,7 +25,11 @@ function Router() {
   return (
     <Switch>
       {!isAuthenticated ? (
-        <Route path="/" component={Landing} />
+        <>
+          <Route path="/" component={Landing} />
+          <Route path="/login" component={Login} />
+          <Route path="/register" component={Register} />
+        </>
       ) : (
         <>
           <Route path="/" component={Dashboard} />

@@ -88,17 +88,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
   setupLocalAuth(app);
 
-  // Auth routes
+  // Manual auth routes
+  app.post('/api/auth/register', async (req, res) => {
+    try {
+      const { email, password, firstName, lastName, username } = req.body;
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: "User already exists" });
+      }
+      
+      const existingUsername = await storage.getUserByUsername(username);
+      if (existingUsername) {
+        return res.status(400).json({ message: "Username already taken" });
+      }
+      
+      // Hash password
+      const passwordHash = await bcrypt.hash(password, 12);
+      
+      // Create user
+      const user = await storage.createUser({
+        id: nanoid(),
+        email,
+        firstName,
+        lastName,
+        username,
+        passwordHash,
+        authType: 'manual',
+        credits: 0,
+      });
+      
+      // Log in the user
+      req.login(user, (err) => {
+        if (err) {
+          return res.status(500).json({ message: "Login failed after registration" });
+        }
+        res.json({ success: true, user: { ...user, passwordHash: undefined } });
+      });
+    } catch (error) {
+      console.error("Registration error:", error);
+      res.status(500).json({ message: "Registration failed" });
+    }
+  });
+
+  app.post('/api/auth/login', passport.authenticate('local'), (req, res) => {
+    res.json({ success: true, user: { ...req.user, passwordHash: undefined } });
+  });
+
+  app.post('/api/auth/logout', (req, res) => {
+    req.logout(() => {
+      res.json({ success: true });
+    });
+  });
+
+  // Auth routes (works for both Google and manual auth)
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      let userId: string;
+      
+      // Check if this is Google auth (has claims) or manual auth (direct user object)
+      if (req.user.claims) {
+        userId = req.user.claims.sub;
+      } else {
+        userId = req.user.id;
+      }
+      
       const user = await storage.getUser(userId);
       
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
       
-      res.json(user);
+      res.json({ ...user, passwordHash: undefined });
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });

@@ -128,9 +128,19 @@ export async function setupAuth(app: Express) {
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
+  if (!req.isAuthenticated() || !req.user) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
   const user = req.user as any;
 
-  if (!req.isAuthenticated() || !user.expires_at) {
+  // Handle manual auth users (they don't have expires_at)
+  if (!user.claims) {
+    return next();
+  }
+
+  // Handle Google auth users with token refresh
+  if (!user.expires_at) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 

@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Gamepad2, Shield, CreditCard, Smartphone } from "lucide-react";
+import { Link } from "wouter";
 
 export default function Landing() {
   const handleLogin = () => {
@@ -18,9 +19,16 @@ export default function Landing() {
             </div>
             <h1 className="text-xl font-bold text-white">DAS Gaming Wallet</h1>
           </div>
-          <Button onClick={handleLogin} className="bg-primary hover:bg-primary/80">
-            Sign In with Google
-          </Button>
+          <div className="flex items-center space-x-3">
+            <Button onClick={handleLogin} className="bg-primary hover:bg-primary/80">
+              Sign In with Google
+            </Button>
+            <Link href="/login">
+              <Button variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white">
+                Sign In
+              </Button>
+            </Link>
+          </div>
         </div>
       </nav>
 
