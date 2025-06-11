@@ -515,7 +515,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         const result = await sheetsClient.values.append({
           spreadsheetId: SPREADSHEET_ID,
-          range: 'Cashapp!A:K',
+          range: 'Cashapp!A1',
           valueInputOption: 'RAW',
           insertDataOption: 'INSERT_ROWS',
           requestBody: {
@@ -610,9 +610,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         const result = await sheetsClient.values.append({
           spreadsheetId: SPREADSHEET_ID,
-          range: 'Cashapp!A:K', // Start at column A and include transaction type
+          range: 'Cashapp!A1', // Force start at column A
           valueInputOption: 'RAW',
-          insertDataOption: 'INSERT_ROWS', // Always append, never overwrite
+          insertDataOption: 'INSERT_ROWS',
           requestBody: {
             values,
           },
