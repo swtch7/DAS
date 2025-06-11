@@ -513,7 +513,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         const result = await sheetsClient.values.append({
           spreadsheetId: SPREADSHEET_ID,
-          range: 'CashApp!A:J', // Use the correct sheet name
+          range: 'Cashapp!A:J', // Use the correct sheet name (case sensitive)
           valueInputOption: 'RAW',
           requestBody: {
             values,
