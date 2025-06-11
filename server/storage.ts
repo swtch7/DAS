@@ -18,6 +18,11 @@ export interface IStorage {
   upsertUser(user: UpsertUser): Promise<User>;
   updateUserCredits(userId: string, credits: number): Promise<void>;
   
+  // Manual auth operations
+  getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  createUser(user: UpsertUser): Promise<User>;
+  
   // Transaction operations
   createTransaction(transaction: InsertTransaction): Promise<Transaction>;
   getUserTransactions(userId: string, limit?: number): Promise<Transaction[]>;
@@ -104,6 +109,25 @@ export class DatabaseStorage implements IStorage {
       .from(creditPurchaseRequests)
       .where(eq(creditPurchaseRequests.id, id));
     return request;
+  }
+
+  // Manual auth operations
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
+  async createUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .returning();
+    return user;
   }
 }
 

@@ -6,10 +6,14 @@ import { insertTransactionSchema, insertCreditPurchaseRequestSchema } from "@sha
 import { z } from "zod";
 import { google } from "googleapis";
 import twilio from "twilio";
+import bcrypt from "bcryptjs";
+import { nanoid } from "nanoid";
+import passport from "passport";
+import { Strategy as LocalStrategy } from "passport-local";
 
 // Google Sheets setup
 const sheets = google.sheets('v4');
-const SPREADSHEET_ID = process.env.GOOGLE_SHEETS_ID || process.env.SHEETS_ID;
+const SPREADSHEET_ID = '1O7AJcTCfXrV63hy2yXwOjdx2I730bf4xB21Z88M9vv4';
 
 // Twilio setup
 const twilioClient = twilio(
@@ -21,12 +25,13 @@ const twilioClient = twilio(
 async function getAuthenticatedSheetsClient() {
   const auth = new google.auth.GoogleAuth({
     credentials: {
-      client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+      client_email: 'hc-sheets-service@n8ntest-461313.iam.gserviceaccount.com',
       private_key: process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(/\\n/g, '\n'),
     },
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
   });
   
+  google.options({ auth });
   return sheets.spreadsheets;
 }
 
@@ -55,8 +60,33 @@ function generateGameCredentials(userId: string) {
   return { username, password };
 }
 
+// Setup local authentication strategy
+function setupLocalAuth(app: Express) {
+  passport.use(new LocalStrategy(
+    { usernameField: 'email' },
+    async (email, password, done) => {
+      try {
+        const user = await storage.getUserByEmail(email);
+        if (!user || !user.passwordHash) {
+          return done(null, false, { message: 'Invalid credentials' });
+        }
+        
+        const isValid = await bcrypt.compare(password, user.passwordHash);
+        if (!isValid) {
+          return done(null, false, { message: 'Invalid credentials' });
+        }
+        
+        return done(null, user);
+      } catch (error) {
+        return done(error);
+      }
+    }
+  ));
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
+  setupLocalAuth(app);
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {

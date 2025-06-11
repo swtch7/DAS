@@ -36,6 +36,10 @@ export const users = pgTable("users", {
   credits: integer("credits").default(0),
   gameUsername: varchar("game_username"),
   gamePassword: varchar("game_password"),
+  // Manual account fields
+  username: varchar("username").unique(),
+  passwordHash: varchar("password_hash"),
+  authType: varchar("auth_type").default("google"), // 'google' or 'manual'
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -81,6 +85,8 @@ export const insertCreditPurchaseRequestSchema = createInsertSchema(creditPurcha
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  usdAmount: z.coerce.string().or(z.number().transform(String)),
 });
 
 // Types
