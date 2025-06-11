@@ -23,29 +23,59 @@ const twilioClient = twilio(
 
 // Helper function to authenticate with Google Sheets
 async function getAuthenticatedSheetsClient() {
-  const privateKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY;
-  
-  if (!privateKey) {
-    throw new Error('Google Service Account private key not found');
-  }
+  try {
+    const privateKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY;
+    
+    if (!privateKey) {
+      throw new Error('Google Service Account private key not found in environment');
+    }
 
-  // Clean and format the private key properly
-  const formattedKey = privateKey
-    .replace(/\\n/g, '\n')
-    .replace(/^\s+|\s+$/g, '')
-    .replace(/-----BEGIN PRIVATE KEY-----\s*/, '-----BEGIN PRIVATE KEY-----\n')
-    .replace(/\s*-----END PRIVATE KEY-----/, '\n-----END PRIVATE KEY-----');
+    console.log('Private key length:', privateKey.length);
+    console.log('Private key starts with:', privateKey.substring(0, 50));
 
-  const auth = new google.auth.GoogleAuth({
-    credentials: {
-      client_email: 'hc-sheets-service@n8ntest-461313.iam.gserviceaccount.com',
+    // Handle different private key formats
+    let formattedKey = privateKey;
+    
+    // If the key contains literal \n characters, replace them
+    if (privateKey.includes('\\n')) {
+      formattedKey = privateKey.replace(/\\n/g, '\n');
+      console.log('Converted escaped newlines to actual newlines');
+    }
+
+    // Ensure proper formatting
+    if (!formattedKey.startsWith('-----BEGIN PRIVATE KEY-----')) {
+      throw new Error('Private key does not start with proper header');
+    }
+
+    if (!formattedKey.endsWith('-----END PRIVATE KEY-----')) {
+      throw new Error('Private key does not end with proper footer');
+    }
+
+    const credentials = {
+      type: 'service_account',
+      project_id: 'n8ntest-461313',
+      private_key_id: '',
       private_key: formattedKey,
-    },
-    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-  });
-  
-  google.options({ auth });
-  return sheets.spreadsheets;
+      client_email: 'hc-sheets-service@n8ntest-461313.iam.gserviceaccount.com',
+      client_id: '',
+      auth_uri: 'https://accounts.google.com/o/oauth2/auth',
+      token_uri: 'https://oauth2.googleapis.com/token',
+    };
+
+    console.log('Creating Google Auth with credentials...');
+    
+    const auth = new google.auth.GoogleAuth({
+      credentials,
+      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    });
+    
+    console.log('Google Auth created successfully');
+    
+    return google.sheets({ version: 'v4', auth }).spreadsheets;
+  } catch (error) {
+    console.error('Error in getAuthenticatedSheetsClient:', error);
+    throw error;
+  }
 }
 
 // Helper function to send SMS
@@ -264,6 +294,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Test Google Sheets connection
+  app.get('/api/test-sheets', isAuthenticated, async (req, res) => {
+    try {
+      const sheetsClient = await getAuthenticatedSheetsClient();
+      
+      // Test reading from the sheet first
+      const readResult = await sheetsClient.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: 'CashApp!A1:J1',
+      });
+      
+      console.log('Sheet read test successful:', readResult.data);
+      
+      // Test writing a simple row
+      const testValues = [
+        [
+          'TEST',
+          'Test User',
+          'Test Last',
+          'test@example.com',
+          '555-0123',
+          'Test Location',
+          '100',
+          '10.00',
+          'TEST-LINK',
+          new Date().toISOString(),
+        ]
+      ];
+      
+      const writeResult = await sheetsClient.values.append({
+        spreadsheetId: SPREADSHEET_ID,
+        range: 'CashApp!A:J',
+        valueInputOption: 'RAW',
+        requestBody: {
+          values: testValues,
+        },
+      });
+      
+      console.log('Sheet write test successful:', writeResult.data);
+      
+      res.json({ 
+        success: true, 
+        readResult: readResult.data,
+        writeResult: writeResult.data 
+      });
+      
+    } catch (error) {
+      console.error("Google Sheets test failed:", error);
+      res.status(500).json({ 
+        error: error.message,
+        details: error.stack 
+      });
+    }
+  });
+
   // Get game site auto-login form
   app.get('/api/game-site-login', isAuthenticated, async (req: any, res) => {
     try {
@@ -428,7 +513,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         const result = await sheetsClient.values.append({
           spreadsheetId: SPREADSHEET_ID,
-          range: 'Sheet1!A:J', // Specify sheet name
+          range: 'CashApp!A:J', // Use the correct sheet name
           valueInputOption: 'RAW',
           requestBody: {
             values,
