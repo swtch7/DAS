@@ -42,13 +42,17 @@ async function getAuthenticatedSheetsClient() {
       console.log('Converted escaped newlines to actual newlines');
     }
 
-    // Ensure proper formatting
+    // Clean up any leading/trailing whitespace and newlines
+    formattedKey = formattedKey.trim();
+    
+    // Add proper header if missing
     if (!formattedKey.startsWith('-----BEGIN PRIVATE KEY-----')) {
-      throw new Error('Private key does not start with proper header');
+      formattedKey = '-----BEGIN PRIVATE KEY-----\n' + formattedKey;
     }
-
+    
+    // Add proper footer if missing
     if (!formattedKey.endsWith('-----END PRIVATE KEY-----')) {
-      throw new Error('Private key does not end with proper footer');
+      formattedKey = formattedKey + '\n-----END PRIVATE KEY-----';
     }
 
     const credentials = {
