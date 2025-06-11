@@ -64,12 +64,12 @@ export default function Dashboard() {
   };
 
   const handleGameSiteAccess = () => {
-    // Generate credentials if needed
+    // Generate credentials if needed and redirect to auto-login
     if (userData && !userData.gameUsername) {
       gameCredentialsMutation.mutate();
     }
-    // Open game site
-    window.open("https://www.goldendragoncity.com/", "_blank");
+    // Open auto-login page that will submit credentials to game site
+    window.open("/api/game-site-login", "_blank");
   };
 
   if (userLoading) {

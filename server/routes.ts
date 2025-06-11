@@ -23,10 +23,23 @@ const twilioClient = twilio(
 
 // Helper function to authenticate with Google Sheets
 async function getAuthenticatedSheetsClient() {
+  const privateKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY;
+  
+  if (!privateKey) {
+    throw new Error('Google Service Account private key not found');
+  }
+
+  // Clean and format the private key properly
+  const formattedKey = privateKey
+    .replace(/\\n/g, '\n')
+    .replace(/^\s+|\s+$/g, '')
+    .replace(/-----BEGIN PRIVATE KEY-----\s*/, '-----BEGIN PRIVATE KEY-----\n')
+    .replace(/\s*-----END PRIVATE KEY-----/, '\n-----END PRIVATE KEY-----');
+
   const auth = new google.auth.GoogleAuth({
     credentials: {
       client_email: 'hc-sheets-service@n8ntest-461313.iam.gserviceaccount.com',
-      private_key: process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      private_key: formattedKey,
     },
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
   });
@@ -53,11 +66,23 @@ async function sendSMS(to: string, message: string) {
   }
 }
 
-// Helper function to generate game credentials
-function generateGameCredentials(userId: string) {
-  const username = `user_${userId.substring(0, 8)}_${Date.now()}`;
-  const password = Math.random().toString(36).slice(-12);
-  return { username, password };
+// Helper function to generate game credentials based on DAS user info
+function generateGameCredentials(user: any) {
+  // Use DAS username if available, otherwise create one from email/name
+  let gameUsername = user.username;
+  if (!gameUsername) {
+    if (user.email) {
+      gameUsername = user.email.split('@')[0];
+    } else if (user.firstName && user.lastName) {
+      gameUsername = `${user.firstName.toLowerCase()}.${user.lastName.toLowerCase()}`;
+    } else {
+      gameUsername = `user_${user.id.substring(0, 8)}`;
+    }
+  }
+  
+  // Use a consistent password based on user ID for auto-login
+  const password = `DAS_${user.id.substring(0, 8)}_Game`;
+  return { username: gameUsername, password };
 }
 
 // Setup local authentication strategy
@@ -218,7 +243,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       if (!user.gameUsername) {
-        const credentials = generateGameCredentials(userId);
+        const credentials = generateGameCredentials(user);
         await storage.upsertUser({
           ...user,
           gameUsername: credentials.username,
@@ -227,7 +252,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Send welcome SMS
         if (user.phone) {
-          const message = `Welcome to DAS Gaming! Your game credentials have been created. Access the game at: https://www.goldendragoncity.com/`;
+          const message = `Welcome to DAS Gaming! Your game credentials: ${credentials.username}/${credentials.password}. Access: https://www.goldendragoncity.com/`;
           await sendSMS(user.phone, message);
         }
       }
@@ -236,6 +261,102 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error generating game credentials:", error);
       res.status(500).json({ message: "Failed to generate credentials" });
+    }
+  });
+
+  // Get game site auto-login form
+  app.get('/api/game-site-login', isAuthenticated, async (req: any, res) => {
+    try {
+      let userId: string;
+      
+      // Check if this is Google auth (has claims) or manual auth (direct user object)
+      if (req.user.claims) {
+        userId = req.user.claims.sub;
+      } else {
+        userId = req.user.id;
+      }
+      
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Generate credentials if they don't exist
+      if (!user.gameUsername) {
+        const credentials = generateGameCredentials(user);
+        await storage.upsertUser({
+          ...user,
+          gameUsername: credentials.username,
+          gamePassword: credentials.password,
+        });
+        user.gameUsername = credentials.username;
+        user.gamePassword = credentials.password;
+      }
+      
+      // Return HTML form that auto-submits to the game site
+      const html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Redirecting to Golden Dragon City...</title>
+          <style>
+            body { 
+              font-family: Arial, sans-serif; 
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              height: 100vh;
+              margin: 0;
+              color: white;
+            }
+            .loader {
+              text-align: center;
+            }
+            .spinner {
+              border: 4px solid rgba(255,255,255,0.3);
+              border-radius: 50%;
+              border-top: 4px solid white;
+              width: 40px;
+              height: 40px;
+              animation: spin 1s linear infinite;
+              margin: 0 auto 20px;
+            }
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="loader">
+            <div class="spinner"></div>
+            <h2>Logging you into Golden Dragon City...</h2>
+            <p>Your credentials are being submitted automatically.</p>
+          </div>
+          
+          <form id="gameLoginForm" action="https://www.goldendragoncity.com/login" method="POST" style="display: none;">
+            <input type="text" name="username" value="${user.gameUsername}" />
+            <input type="password" name="password" value="${user.gamePassword}" />
+          </form>
+          
+          <script>
+            // Auto-submit the form after a brief delay
+            setTimeout(() => {
+              document.getElementById('gameLoginForm').submit();
+            }, 2000);
+          </script>
+        </body>
+        </html>
+      `;
+      
+      res.setHeader('Content-Type', 'text/html');
+      res.send(html);
+      
+    } catch (error) {
+      console.error("Error creating game site login:", error);
+      res.status(500).json({ message: "Failed to create game login" });
     }
   });
 
@@ -303,14 +424,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ]
         ];
         
-        await sheetsClient.values.append({
+        console.log('Attempting to write to Google Sheets:', { spreadsheetId: SPREADSHEET_ID, values });
+        
+        const result = await sheetsClient.values.append({
           spreadsheetId: SPREADSHEET_ID,
-          range: 'A:J',
+          range: 'Sheet1!A:J', // Specify sheet name
           valueInputOption: 'RAW',
           requestBody: {
             values,
           },
         });
+        
+        console.log('Google Sheets write successful:', result.data);
         
         // Update request with sheet row ID
         await storage.updateCreditPurchaseRequest(request.id, {
@@ -319,6 +444,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
       } catch (sheetsError) {
         console.error("Error adding to Google Sheets:", sheetsError);
+        // Don't fail the request if sheets fails
       }
       
       res.json(request);
