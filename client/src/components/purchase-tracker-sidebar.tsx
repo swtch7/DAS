@@ -36,7 +36,7 @@ const stages: TrackerStage[] = [
   },
   {
     id: 'processing',
-    title: 'Processing Payment',
+    title: 'Payment Received',
     description: 'Verifying completion',
     icon: CreditCard,
   },

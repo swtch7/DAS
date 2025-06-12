@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import Dashboard from "@/pages/dashboard";
 import Landing from "@/pages/landing";
 import Profile from "@/pages/profile";
+import Games from "@/pages/games";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
 import ForgotPassword from "@/pages/forgot-password";
@@ -46,6 +47,7 @@ function Router() {
         <>
           <Route path="/" component={Dashboard} />
           <Route path="/profile" component={Profile} />
+          <Route path="/games" component={Games} />
         </>
       )}
       <Route component={NotFound} />

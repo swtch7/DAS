@@ -164,16 +164,15 @@ export default function Dashboard() {
                   <span>Profile</span>
                 </a>
               </Link>
+              <Link href="/games">
+                <a className="flex items-center space-x-3 px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors">
+                  <Gamepad2 className="h-5 w-5" />
+                  <span>Games</span>
+                </a>
+              </Link>
               <button className="w-full flex items-center space-x-3 px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors">
                 <History className="h-5 w-5" />
                 <span>Transaction History</span>
-              </button>
-              <button
-                onClick={handleGameSiteAccess}
-                className="w-full flex items-center space-x-3 px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
-              >
-                <ExternalLink className="h-5 w-5" />
-                <span>Game Site</span>
               </button>
             </nav>
             
