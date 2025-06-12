@@ -91,10 +91,10 @@ export default function ForgotPassword() {
             ) : (
               <div className="text-center space-y-4">
                 <div className="text-green-400 text-sm">
-                  Reset instructions have been sent to your email and phone (if available).
+                  Reset instructions have been sent via SMS to your phone number on file.
                 </div>
                 <div className="text-gray-400 text-sm">
-                  Didn't receive it? Check your spam folder or try again.
+                  Didn't receive it? Make sure your phone number is correct in your profile or try again.
                 </div>
                 <Button
                   onClick={() => setSubmitted(false)}

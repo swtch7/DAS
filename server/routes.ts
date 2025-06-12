@@ -128,9 +128,9 @@ async function sendSMS(to: string, message: string) {
     });
     console.log('SMS sent successfully to:', to);
   } catch (error) {
-    console.error('Failed to send SMS:', error);
+    console.error('Failed to send SMS to', to, '- Error:', error.message);
     // For testing purposes, log the message that would have been sent
-    console.log('SMS message that failed to send:', { to, message });
+    console.log('🔗 PASSWORD RESET LINK (SMS failed):', message);
   }
 }
 
