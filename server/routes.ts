@@ -158,25 +158,55 @@ function generateGameCredentials(user: any) {
 // Setup local authentication strategy
 function setupLocalAuth(app: Express) {
   passport.use(new LocalStrategy(
-    { usernameField: 'email' },
-    async (email, password, done) => {
+    { usernameField: 'username', passwordField: 'password' },
+    async (username, password, done) => {
       try {
-        const user = await storage.getUserByEmail(email);
+        console.log('Authenticating user:', username);
+        // Check if it's an email or username
+        let user;
+        if (username.includes('@')) {
+          user = await storage.getUserByEmail(username);
+        } else {
+          user = await storage.getUserByUsername(username);
+        }
+        
+        console.log('User found:', user ? 'yes' : 'no');
+        
         if (!user || !user.passwordHash) {
           return done(null, false, { message: 'Invalid credentials' });
         }
         
         const isValid = await bcrypt.compare(password, user.passwordHash);
+        console.log('Password valid:', isValid);
+        
         if (!isValid) {
           return done(null, false, { message: 'Invalid credentials' });
         }
         
         return done(null, user);
       } catch (error) {
+        console.error('Auth strategy error:', error);
         return done(error);
       }
     }
   ));
+  
+  // Configure passport serialization for sessions
+  passport.serializeUser((user: any, done) => {
+    console.log('Serializing user:', user.id);
+    done(null, user.id);
+  });
+  
+  passport.deserializeUser(async (id: string, done) => {
+    try {
+      console.log('Deserializing user:', id);
+      const user = await storage.getUser(id);
+      done(null, user);
+    } catch (error) {
+      console.error('Deserialization error:', error);
+      done(error);
+    }
+  });
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -227,8 +257,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/auth/login', passport.authenticate('local'), (req, res) => {
-    res.json({ success: true, user: { ...req.user, passwordHash: undefined } });
+  app.post('/api/auth/login', (req, res, next) => {
+    console.log('Login attempt:', req.body);
+    passport.authenticate('local', (err: any, user: any, info: any) => {
+      console.log('Auth result:', { err, user: user ? 'found' : 'not found', info });
+      if (err) {
+        console.error('Authentication error:', err);
+        return res.status(500).json({ message: "Authentication error" });
+      }
+      if (!user) {
+        console.log('No user found:', info);
+        return res.status(400).json({ message: info?.message || "Invalid credentials" });
+      }
+      
+      req.logIn(user, (err) => {
+        if (err) {
+          console.error('Login error:', err);
+          return res.status(500).json({ message: "Login failed" });
+        }
+        console.log('Login successful for user:', user.username || user.email);
+        res.json({ success: true, user: { ...user, passwordHash: undefined } });
+      });
+    })(req, res, next);
   });
 
   app.post('/api/auth/logout', (req, res) => {
