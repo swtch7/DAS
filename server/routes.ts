@@ -1082,6 +1082,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const newCredits = (user.credits || 0) + request.creditsRequested;
         await storage.updateUserCredits(request.userId, newCredits);
         
+        // Create transaction record
+        await storage.createTransaction({
+          userId: request.userId,
+          type: 'purchase',
+          amount: request.creditsRequested,
+          usdValue: request.usdAmount,
+          description: `Credit purchase - ${request.creditsRequested} credits`,
+          status: 'completed',
+        });
+        
         // Send SMS confirmation
         if (user.phone) {
           const message = `Payment confirmed! ${request.creditsRequested} credits added to your DAS Gaming account. New balance: ${newCredits} credits.`;
