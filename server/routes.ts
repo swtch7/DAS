@@ -960,10 +960,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const transactionId = parseInt(req.params.id);
       const { adminUrl } = req.body;
       
-      await db
-        .update(transactions)
-        .set({ adminUrl })
-        .where(eq(transactions.id, transactionId));
+      await storage.updateTransactionAdminUrl(transactionId, adminUrl);
       
       res.json({ success: true });
     } catch (error) {

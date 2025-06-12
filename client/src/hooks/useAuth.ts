@@ -10,5 +10,6 @@ export function useAuth() {
     user,
     isLoading,
     isAuthenticated: !!user,
+    isAdmin: user?.username === 'admin' || user?.id === 'admin',
   };
 }
