@@ -79,7 +79,7 @@ export default function AdminDashboard() {
       const endpoint = type === 'purchase' 
         ? `/api/admin/credit-purchases/${id}`
         : `/api/admin/redemptions/${id}`;
-      return apiRequest(endpoint, "PATCH", { adminUrl });
+      return apiRequest("PATCH", endpoint, { adminUrl });
     },
     onSuccess: () => {
       toast({
@@ -101,7 +101,7 @@ export default function AdminDashboard() {
   // Confirm payment mutation
   const confirmPaymentMutation = useMutation({
     mutationFn: async (id: number) => {
-      return apiRequest(`/api/admin/credit-purchases/${id}/confirm`, "PATCH");
+      return apiRequest("PATCH", `/api/admin/credit-purchases/${id}/confirm`);
     },
     onSuccess: () => {
       toast({
@@ -139,6 +139,25 @@ export default function AdminDashboard() {
 
   const handleUrlInputChange = (key: string, value: string) => {
     setUrlInputs(prev => ({ ...prev, [key]: value }));
+  };
+
+  // Sort and color code requests
+  const sortedCreditRequests = [...creditRequests].sort((a, b) => {
+    if (a.status === 'completed' && b.status !== 'completed') return 1;
+    if (a.status !== 'completed' && b.status === 'completed') return -1;
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+
+  const sortedRedemptions = [...redemptions].sort((a, b) => {
+    if (a.status === 'completed' && b.status !== 'completed') return 1;
+    if (a.status !== 'completed' && b.status === 'completed') return -1;
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+
+  const getStatusColor = (request: CreditPurchaseRequest | RedemptionTransaction) => {
+    if (request.status === 'completed') return 'border-green-500 bg-green-900/20';
+    if (request.adminUrl) return 'border-yellow-500 bg-yellow-900/20';
+    return 'border-red-500 bg-red-900/20';
   };
 
   return (
@@ -271,57 +290,58 @@ export default function AdminDashboard() {
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400 mx-auto"></div>
                     <p className="mt-2 text-zinc-400">Loading requests...</p>
                   </div>
-                ) : creditRequests.length > 0 ? (
-                  <div className="space-y-4">
-                    {creditRequests.map((request: CreditPurchaseRequest) => (
-                      <div key={request.id} className="border border-zinc-600 rounded-lg p-4 bg-zinc-700">
-                        <div className="flex justify-between items-start mb-3">
-                          <div>
-                            <h3 className="font-semibold text-white">
-                              {request.user?.firstName && request.user?.lastName
-                                ? `${request.user.firstName} ${request.user.lastName}`
-                                : request.user?.email || 'Unknown User'}
-                            </h3>
-                            <p className="text-zinc-400 text-sm">{request.user?.email}</p>
-                            <p className="text-zinc-300 text-sm">
-                              {request.creditsRequested} credits (${request.usdAmount})
-                            </p>
+                ) : sortedCreditRequests.length > 0 ? (
+                  <div className="space-y-2">
+                    {sortedCreditRequests.map((request: CreditPurchaseRequest) => (
+                      <div key={request.id} className={`border rounded-lg p-3 ${getStatusColor(request)}`}>
+                        <div className="flex justify-between items-center mb-2">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3">
+                              <h3 className="font-medium text-white text-sm">
+                                {request.user?.firstName && request.user?.lastName
+                                  ? `${request.user.firstName} ${request.user.lastName}`
+                                  : request.user?.email || 'Unknown User'}
+                              </h3>
+                              <span className="text-zinc-300 text-sm">
+                                {request.creditsRequested} credits (${request.usdAmount})
+                              </span>
+                              <Badge variant={request.status === 'completed' ? 'default' : 'secondary'} className="text-xs">
+                                {request.status}
+                              </Badge>
+                            </div>
+                            <p className="text-zinc-400 text-xs">{request.user?.email}</p>
                           </div>
                           <div className="text-right">
-                            <Badge variant={request.status === 'completed' ? 'default' : 'secondary'}>
-                              {request.status}
-                            </Badge>
-                            <p className="text-zinc-400 text-xs mt-1">
+                            <p className="text-zinc-400 text-xs">
                               {formatDistanceToNow(new Date(request.createdAt))} ago
                             </p>
                           </div>
                         </div>
 
                         {request.adminUrl && (
-                          <div className="mb-3 p-2 bg-zinc-600 rounded text-sm">
-                            <strong className="text-zinc-300">Admin URL:</strong>
-                            <br />
+                          <div className="mb-2 p-2 bg-zinc-600/50 rounded text-xs">
+                            <strong className="text-zinc-300">URL:</strong>
                             <a href={request.adminUrl} target="_blank" rel="noopener noreferrer" 
-                               className="text-yellow-400 hover:underline break-all">
-                              {request.adminUrl}
+                               className="text-yellow-400 hover:underline break-all ml-1">
+                              {request.adminUrl.length > 60 ? `${request.adminUrl.substring(0, 60)}...` : request.adminUrl}
                             </a>
                           </div>
                         )}
 
-                        <div className="space-y-3">
+                        <div className="space-y-2">
                           <div className="flex gap-2">
                             <Input
                               placeholder="Enter admin URL"
                               value={urlInputs[`purchase-${request.id}`] || ''}
                               onChange={(e) => handleUrlInputChange(`purchase-${request.id}`, e.target.value)}
-                              className="bg-zinc-600 border-zinc-500 text-white flex-1"
+                              className="bg-zinc-600 border-zinc-500 text-white flex-1 h-8 text-sm"
                             />
                             <Button
                               onClick={() => handleUpdateUrl(request.id, 'purchase')}
                               disabled={updateUrlMutation.isPending}
-                              className="bg-blue-600 hover:bg-blue-700"
+                              className="bg-blue-600 hover:bg-blue-700 h-8 px-3 text-xs"
                             >
-                              Update URL
+                              Update
                             </Button>
                           </div>
 
@@ -329,9 +349,9 @@ export default function AdminDashboard() {
                             <Button
                               onClick={() => handleConfirmPayment(request.id)}
                               disabled={confirmPaymentMutation.isPending}
-                              className="w-full bg-green-600 hover:bg-green-700 flex items-center gap-2"
+                              className="w-full bg-green-600 hover:bg-green-700 h-8 text-xs flex items-center gap-1"
                             >
-                              <CheckCircle className="h-4 w-4" />
+                              <CheckCircle className="h-3 w-3" />
                               Confirm Payment Complete
                             </Button>
                           )}
@@ -360,40 +380,41 @@ export default function AdminDashboard() {
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400 mx-auto"></div>
                     <p className="mt-2 text-zinc-400">Loading redemptions...</p>
                   </div>
-                ) : redemptions.length > 0 ? (
-                  <div className="space-y-4">
-                    {redemptions.map((redemption: RedemptionTransaction) => (
-                      <div key={redemption.id} className="border border-zinc-600 rounded-lg p-4 bg-zinc-700">
-                        <div className="flex justify-between items-start mb-3">
-                          <div>
-                            <h3 className="font-semibold text-white">
-                              {redemption.userFirstName && redemption.userLastName
-                                ? `${redemption.userFirstName} ${redemption.userLastName}`
-                                : redemption.userEmail}
-                            </h3>
-                            <p className="text-zinc-400 text-sm">{redemption.userEmail}</p>
-                            <p className="text-zinc-300 text-sm">{redemption.description}</p>
-                            <p className="text-zinc-300 text-sm">
-                              {Math.abs(redemption.amount)} credits (${redemption.usdValue})
-                            </p>
+                ) : sortedRedemptions.length > 0 ? (
+                  <div className="space-y-2">
+                    {sortedRedemptions.map((redemption: RedemptionTransaction) => (
+                      <div key={redemption.id} className={`border rounded-lg p-3 ${getStatusColor(redemption)}`}>
+                        <div className="flex justify-between items-center mb-2">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3">
+                              <h3 className="font-medium text-white text-sm">
+                                {redemption.userFirstName && redemption.userLastName
+                                  ? `${redemption.userFirstName} ${redemption.userLastName}`
+                                  : redemption.userEmail}
+                              </h3>
+                              <span className="text-zinc-300 text-sm">
+                                {Math.abs(redemption.amount)} credits (${redemption.usdValue})
+                              </span>
+                              <Badge variant={redemption.status === 'completed' ? 'default' : 'secondary'} className="text-xs">
+                                {redemption.status}
+                              </Badge>
+                            </div>
+                            <p className="text-zinc-400 text-xs">{redemption.userEmail}</p>
+                            <p className="text-zinc-300 text-xs">{redemption.description}</p>
                           </div>
                           <div className="text-right">
-                            <Badge variant={redemption.status === 'completed' ? 'default' : 'secondary'}>
-                              {redemption.status}
-                            </Badge>
-                            <p className="text-zinc-400 text-xs mt-1">
+                            <p className="text-zinc-400 text-xs">
                               {formatDistanceToNow(new Date(redemption.createdAt))} ago
                             </p>
                           </div>
                         </div>
 
                         {redemption.adminUrl && (
-                          <div className="mb-3 p-2 bg-zinc-600 rounded text-sm">
-                            <strong className="text-zinc-300">Admin URL:</strong>
-                            <br />
+                          <div className="mb-2 p-2 bg-zinc-600/50 rounded text-xs">
+                            <strong className="text-zinc-300">URL:</strong>
                             <a href={redemption.adminUrl} target="_blank" rel="noopener noreferrer" 
-                               className="text-yellow-400 hover:underline break-all">
-                              {redemption.adminUrl}
+                               className="text-yellow-400 hover:underline break-all ml-1">
+                              {redemption.adminUrl.length > 60 ? `${redemption.adminUrl.substring(0, 60)}...` : redemption.adminUrl}
                             </a>
                           </div>
                         )}
@@ -403,14 +424,14 @@ export default function AdminDashboard() {
                             placeholder="Enter admin URL"
                             value={urlInputs[`redemption-${redemption.id}`] || ''}
                             onChange={(e) => handleUrlInputChange(`redemption-${redemption.id}`, e.target.value)}
-                            className="bg-zinc-600 border-zinc-500 text-white"
+                            className="bg-zinc-600 border-zinc-500 text-white flex-1 h-8 text-sm"
                           />
                           <Button
                             onClick={() => handleUpdateUrl(redemption.id, 'redemption')}
                             disabled={updateUrlMutation.isPending}
-                            className="bg-blue-600 hover:bg-blue-700"
+                            className="bg-blue-600 hover:bg-blue-700 h-8 px-3 text-xs"
                           >
-                            Update URL
+                            Update
                           </Button>
                         </div>
                       </div>
