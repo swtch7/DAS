@@ -349,41 +349,36 @@ export default function AdminDashboard() {
                           </div>
                         </div>
 
-                        {request.adminUrl && (
-                          <div className="mb-2 p-2 bg-zinc-600/50 rounded text-xs">
-                            <strong className="text-zinc-300">URL:</strong>
-                            <a href={request.adminUrl} target="_blank" rel="noopener noreferrer" 
-                               className="text-yellow-400 hover:underline break-all ml-1">
-                              {request.adminUrl.length > 60 ? `${request.adminUrl.substring(0, 60)}...` : request.adminUrl}
-                            </a>
-                          </div>
-                        )}
-
-                        <div className="space-y-2">
-                          <div className="flex gap-2">
-                            <Input
-                              placeholder="Enter admin URL"
-                              value={urlInputs[`purchase-${request.id}`] || ''}
-                              onChange={(e) => handleUrlInputChange(`purchase-${request.id}`, e.target.value)}
-                              className="bg-zinc-600 border-zinc-500 text-white flex-1 h-8 text-sm"
-                            />
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="Enter admin URL"
+                            value={urlInputs[`purchase-${request.id}`] || request.adminUrl || ''}
+                            onChange={(e) => handleUrlInputChange(`purchase-${request.id}`, e.target.value)}
+                            className="bg-zinc-600 border-zinc-500 text-white flex-1 h-8 text-sm"
+                          />
+                          <Button
+                            onClick={() => handleUpdateUrl(request.id, 'purchase')}
+                            disabled={updateUrlMutation.isPending}
+                            className="bg-blue-600 hover:bg-blue-700 h-8 px-3 text-xs"
+                          >
+                            Update
+                          </Button>
+                          {request.adminUrl && (
                             <Button
-                              onClick={() => handleUpdateUrl(request.id, 'purchase')}
-                              disabled={updateUrlMutation.isPending}
-                              className="bg-blue-600 hover:bg-blue-700 h-8 px-3 text-xs"
+                              onClick={() => handleCopyUrl(request.adminUrl!)}
+                              className="bg-zinc-600 hover:bg-zinc-500 h-8 px-3 text-xs"
                             >
-                              Update
+                              <Copy className="h-3 w-3" />
                             </Button>
-                          </div>
-
+                          )}
                           {request.adminUrl && request.status !== 'completed' && (
                             <Button
                               onClick={() => handleConfirmPayment(request.id)}
                               disabled={confirmPaymentMutation.isPending}
-                              className="w-full bg-green-600 hover:bg-green-700 h-8 text-xs flex items-center gap-1"
+                              className="bg-green-600 hover:bg-green-700 h-8 px-3 text-xs flex items-center gap-1"
                             >
                               <CheckCircle className="h-3 w-3" />
-                              Confirm Payment Complete
+                              Confirm
                             </Button>
                           )}
                         </div>
@@ -411,9 +406,9 @@ export default function AdminDashboard() {
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400 mx-auto"></div>
                     <p className="mt-2 text-zinc-400">Loading redemptions...</p>
                   </div>
-                ) : sortedRedemptions.length > 0 ? (
+                ) : openRedemptions.length > 0 ? (
                   <div className="space-y-2">
-                    {sortedRedemptions.map((redemption: RedemptionTransaction) => (
+                    {openRedemptions.map((redemption: RedemptionTransaction) => (
                       <div key={redemption.id} className={`border rounded-lg p-3 ${getStatusColor(redemption)}`}>
                         <div className="flex justify-between items-center mb-2">
                           <div className="flex-1">
@@ -440,20 +435,10 @@ export default function AdminDashboard() {
                           </div>
                         </div>
 
-                        {redemption.adminUrl && (
-                          <div className="mb-2 p-2 bg-zinc-600/50 rounded text-xs">
-                            <strong className="text-zinc-300">URL:</strong>
-                            <a href={redemption.adminUrl} target="_blank" rel="noopener noreferrer" 
-                               className="text-yellow-400 hover:underline break-all ml-1">
-                              {redemption.adminUrl.length > 60 ? `${redemption.adminUrl.substring(0, 60)}...` : redemption.adminUrl}
-                            </a>
-                          </div>
-                        )}
-
                         <div className="flex gap-2">
                           <Input
                             placeholder="Enter admin URL"
-                            value={urlInputs[`redemption-${redemption.id}`] || ''}
+                            value={urlInputs[`redemption-${redemption.id}`] || redemption.adminUrl || ''}
                             onChange={(e) => handleUrlInputChange(`redemption-${redemption.id}`, e.target.value)}
                             className="bg-zinc-600 border-zinc-500 text-white flex-1 h-8 text-sm"
                           />
@@ -464,6 +449,14 @@ export default function AdminDashboard() {
                           >
                             Update
                           </Button>
+                          {redemption.adminUrl && (
+                            <Button
+                              onClick={() => handleCopyUrl(redemption.adminUrl!)}
+                              className="bg-zinc-600 hover:bg-zinc-500 h-8 px-3 text-xs"
+                            >
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -473,6 +466,135 @@ export default function AdminDashboard() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="completed" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card className="bg-zinc-800 border-zinc-700">
+                <CardHeader>
+                  <CardTitle className="text-zinc-200 flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5 text-green-400" />
+                    Completed Credit Purchases
+                  </CardTitle>
+                  <CardDescription className="text-zinc-400">
+                    Confirmed and processed credit purchases
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {completedCreditRequests.length > 0 ? (
+                    <div className="space-y-2">
+                      {completedCreditRequests.map((request: CreditPurchaseRequest) => (
+                        <div key={request.id} className="border border-green-500 bg-green-900/20 rounded-lg p-3">
+                          <div className="flex justify-between items-center mb-2">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3">
+                                <h3 className="font-medium text-white text-sm">
+                                  {request.user?.firstName && request.user?.lastName
+                                    ? `${request.user.firstName} ${request.user.lastName}`
+                                    : request.user?.email || 'Unknown User'}
+                                </h3>
+                                <span className="text-zinc-300 text-sm">
+                                  {request.creditsRequested} credits (${request.usdAmount})
+                                </span>
+                                <Badge variant="default" className="text-xs bg-green-600">
+                                  {request.status}
+                                </Badge>
+                              </div>
+                              <p className="text-zinc-400 text-xs">{request.user?.email}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-zinc-400 text-xs">
+                                {formatDistanceToNow(new Date(request.createdAt))} ago
+                              </p>
+                            </div>
+                          </div>
+                          {request.adminUrl && (
+                            <div className="flex gap-2">
+                              <Input
+                                value={request.adminUrl}
+                                readOnly
+                                className="bg-zinc-600 border-zinc-500 text-white flex-1 h-8 text-sm"
+                              />
+                              <Button
+                                onClick={() => handleCopyUrl(request.adminUrl!)}
+                                className="bg-zinc-600 hover:bg-zinc-500 h-8 px-3 text-xs"
+                              >
+                                <Copy className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-zinc-400 text-center py-8">No completed credit purchases</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card className="bg-zinc-800 border-zinc-700">
+                <CardHeader>
+                  <CardTitle className="text-zinc-200 flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5 text-green-400" />
+                    Completed Redemptions
+                  </CardTitle>
+                  <CardDescription className="text-zinc-400">
+                    Processed redemption transactions
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {completedRedemptions.length > 0 ? (
+                    <div className="space-y-2">
+                      {completedRedemptions.map((redemption: RedemptionTransaction) => (
+                        <div key={redemption.id} className="border border-green-500 bg-green-900/20 rounded-lg p-3">
+                          <div className="flex justify-between items-center mb-2">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3">
+                                <h3 className="font-medium text-white text-sm">
+                                  {redemption.userFirstName && redemption.userLastName
+                                    ? `${redemption.userFirstName} ${redemption.userLastName}`
+                                    : redemption.userEmail}
+                                </h3>
+                                <span className="text-zinc-300 text-sm">
+                                  {Math.abs(redemption.amount)} credits (${redemption.usdValue})
+                                </span>
+                                <Badge variant="default" className="text-xs bg-green-600">
+                                  {redemption.status}
+                                </Badge>
+                              </div>
+                              <p className="text-zinc-400 text-xs">{redemption.userEmail}</p>
+                              <p className="text-zinc-300 text-xs">{redemption.description}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-zinc-400 text-xs">
+                                {formatDistanceToNow(new Date(redemption.createdAt))} ago
+                              </p>
+                            </div>
+                          </div>
+                          {redemption.adminUrl && (
+                            <div className="flex gap-2">
+                              <Input
+                                value={redemption.adminUrl}
+                                readOnly
+                                className="bg-zinc-600 border-zinc-500 text-white flex-1 h-8 text-sm"
+                              />
+                              <Button
+                                onClick={() => handleCopyUrl(redemption.adminUrl!)}
+                                className="bg-zinc-600 hover:bg-zinc-500 h-8 px-3 text-xs"
+                              >
+                                <Copy className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-zinc-400 text-center py-8">No completed redemptions</p>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
