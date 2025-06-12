@@ -1107,8 +1107,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Purchase not found" });
       }
       
-      // Verify the purchase belongs to the authenticated user
-      if (purchase.userId !== userId) {
+      // Allow access if user owns the purchase OR if user is admin
+      const isAdmin = userId === 'admin';
+      const isOwner = purchase.userId === userId;
+      
+      if (!isOwner && !isAdmin) {
         return res.status(403).json({ message: "Access denied" });
       }
       

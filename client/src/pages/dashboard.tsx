@@ -36,19 +36,33 @@ export default function Dashboard() {
     usdAmount: string;
   } | null>(null);
 
-  // Check for existing active purchase on load
+  // Check for existing active purchase on load and clear if user changed
   useEffect(() => {
     const activePurchase = localStorage.getItem('activePurchase');
-    if (activePurchase) {
+    const lastUserId = localStorage.getItem('lastUserId');
+    const currentUserId = user?.id;
+    
+    if (activePurchase && currentUserId) {
       try {
+        // Clear tracker if user changed
+        if (lastUserId && lastUserId !== currentUserId) {
+          localStorage.removeItem('activePurchase');
+          localStorage.removeItem('lastUserId');
+          return;
+        }
+        
         const purchase = JSON.parse(activePurchase);
         setLatestPurchase(purchase);
         setShowTracker(true);
+        localStorage.setItem('lastUserId', currentUserId);
       } catch (error) {
         localStorage.removeItem('activePurchase');
+        localStorage.removeItem('lastUserId');
       }
+    } else if (currentUserId) {
+      localStorage.setItem('lastUserId', currentUserId);
     }
-  }, []);
+  }, [user?.id]);
 
   // Fetch user data
   const { data: userData, isLoading: userLoading } = useQuery({
