@@ -1030,7 +1030,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const requestId = parseInt(req.params.id);
       const { adminUrl } = req.body;
       
+      // Get the credit request to find user info
+      const creditRequest = await storage.getCreditRequestById(requestId);
+      if (!creditRequest) {
+        return res.status(404).json({ message: "Credit request not found" });
+      }
+
+      // Get user details
+      const user = await storage.getUser(creditRequest.userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
       await storage.updateCreditPurchaseRequest(requestId, { adminUrl });
+      
+      // Send SMS notification if user has phone number
+      if (user.phone) {
+        try {
+          const message = `DAS Gaming: Your credit purchase payment link is ready. Please check your account or contact support.`;
+          await sendSMS(user.phone, message);
+          console.log(`✅ SMS sent to ${user.phone}: URL sent for credit purchase ${requestId}`);
+        } catch (smsError) {
+          console.error(`Failed to send SMS to ${user.phone}:`, smsError);
+          console.log(`🔗 SMS FAILED - URL sent for credit purchase ${requestId}`);
+        }
+      }
       
       res.json({ success: true });
     } catch (error) {
@@ -1078,7 +1102,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const transactionId = parseInt(req.params.id);
       const { adminUrl } = req.body;
       
+      // Get transaction to find user info (need to implement this in storage)
+      const redemptions = await storage.getAllRedemptions();
+      const redemption = redemptions.find(r => r.id === transactionId);
+      
+      if (!redemption) {
+        return res.status(404).json({ message: "Redemption transaction not found" });
+      }
+
+      // Get user details
+      const user = await storage.getUser(redemption.userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
       await storage.updateTransactionAdminUrl(transactionId, adminUrl);
+      
+      // Send SMS notification if user has phone number
+      if (user.phone) {
+        try {
+          const message = `DAS Gaming: Your redemption request has been processed. Please check your account or contact support.`;
+          await sendSMS(user.phone, message);
+          console.log(`✅ SMS sent to ${user.phone}: URL sent for redemption ${transactionId}`);
+        } catch (smsError) {
+          console.error(`Failed to send SMS to ${user.phone}:`, smsError);
+          console.log(`🔗 SMS FAILED - URL sent for redemption ${transactionId}`);
+        }
+      }
       
       res.json({ success: true });
     } catch (error) {

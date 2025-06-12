@@ -83,8 +83,8 @@ export default function AdminDashboard() {
     },
     onSuccess: () => {
       toast({
-        title: "Success",
-        description: "Admin URL updated successfully",
+        title: "URL Updated",
+        description: "URL sent via SMS to customer",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/credit-purchases"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/redemptions"] });
