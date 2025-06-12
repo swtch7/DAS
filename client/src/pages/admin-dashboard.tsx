@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { formatDistanceToNow } from "date-fns";
-import { Users, Clock, TrendingUp, DollarSign, CreditCard, CheckCircle } from "lucide-react";
+import { Users, Clock, TrendingUp, DollarSign, CreditCard, CheckCircle, Copy, LogOut } from "lucide-react";
 
 interface CreditPurchaseRequest {
   id: number;
@@ -160,26 +160,57 @@ export default function AdminDashboard() {
     return 'border-red-500 bg-red-900/20';
   };
 
+  const handleCopyUrl = async (url: string) => {
+    await navigator.clipboard.writeText(url);
+    toast({
+      title: "Copied!",
+      description: "URL copied to clipboard",
+    });
+  };
+
+  const handleLogout = () => {
+    window.location.href = "/api/logout";
+  };
+
+  // Filter completed requests
+  const completedCreditRequests = creditRequests.filter(req => req.status === 'completed');
+  const openCreditRequests = creditRequests.filter(req => req.status !== 'completed');
+  const completedRedemptions = redemptions.filter(req => req.status === 'completed');
+  const openRedemptions = redemptions.filter(req => req.status !== 'completed');
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-900 to-black text-white p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-            Admin Dashboard
-          </h1>
-          <p className="text-zinc-400 mt-2">Manage users, credit requests, and system statistics</p>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
+              Admin Dashboard
+            </h1>
+            <p className="text-zinc-400 mt-2">Manage users, credit requests, and system statistics</p>
+          </div>
+          <Button
+            onClick={handleLogout}
+            variant="outline"
+            className="border-zinc-600 text-white hover:bg-zinc-700"
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Logout
+          </Button>
         </div>
 
         <Tabs defaultValue="stats" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 bg-zinc-800 border-zinc-700">
+          <TabsList className="grid w-full grid-cols-4 bg-zinc-800 border-zinc-700">
             <TabsTrigger value="stats" className="data-[state=active]:bg-yellow-600">
               Statistics
             </TabsTrigger>
             <TabsTrigger value="buy" className="data-[state=active]:bg-yellow-600">
-              Buy Credits
+              Open Buy Credits
             </TabsTrigger>
             <TabsTrigger value="redeem" className="data-[state=active]:bg-yellow-600">
               Redeem Credits
+            </TabsTrigger>
+            <TabsTrigger value="completed" className="data-[state=active]:bg-yellow-600">
+              Completed Credits
             </TabsTrigger>
           </TabsList>
 
@@ -278,10 +309,10 @@ export default function AdminDashboard() {
               <CardHeader>
                 <CardTitle className="text-zinc-200 flex items-center gap-2">
                   <DollarSign className="h-5 w-5 text-green-400" />
-                  Credit Purchase Requests
+                  Open Credit Purchase Requests
                 </CardTitle>
                 <CardDescription className="text-zinc-400">
-                  Manage user credit purchase requests and payment confirmations
+                  Manage pending user credit purchase requests and payment confirmations
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -290,9 +321,9 @@ export default function AdminDashboard() {
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400 mx-auto"></div>
                     <p className="mt-2 text-zinc-400">Loading requests...</p>
                   </div>
-                ) : sortedCreditRequests.length > 0 ? (
+                ) : openCreditRequests.length > 0 ? (
                   <div className="space-y-2">
-                    {sortedCreditRequests.map((request: CreditPurchaseRequest) => (
+                    {openCreditRequests.map((request: CreditPurchaseRequest) => (
                       <div key={request.id} className={`border rounded-lg p-3 ${getStatusColor(request)}`}>
                         <div className="flex justify-between items-center mb-2">
                           <div className="flex-1">
