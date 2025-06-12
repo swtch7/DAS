@@ -1,8 +1,10 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertTransactionSchema, insertCreditPurchaseRequestSchema } from "@shared/schema";
+import { setupAuth, isAuthenticated, isAdmin } from "./replitAuth";
+import { insertTransactionSchema, insertCreditPurchaseRequestSchema, transactions, users } from "@shared/schema";
+import { eq, desc } from "drizzle-orm";
+import { db } from "./db";
 import { z } from "zod";
 import { google } from "googleapis";
 import twilio from "twilio";
@@ -891,6 +893,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error completing purchase:", error);
       res.status(500).json({ message: "Failed to complete purchase" });
+    }
+  });
+
+  // Admin Routes
+  
+  // Get all credit purchase requests for admin
+  app.get('/api/admin/credit-purchases', isAdmin, async (req, res) => {
+    try {
+      const requests = await storage.getPendingCreditRequests();
+      
+      // Get user information for each request
+      const requestsWithUsers = await Promise.all(
+        requests.map(async (request) => {
+          const user = await storage.getUser(request.userId);
+          return {
+            ...request,
+            user: user ? { 
+              id: user.id, 
+              email: user.email, 
+              firstName: user.firstName, 
+              lastName: user.lastName 
+            } : null
+          };
+        })
+      );
+      
+      res.json(requestsWithUsers);
+    } catch (error) {
+      console.error("Error fetching admin credit requests:", error);
+      res.status(500).json({ message: "Failed to fetch credit requests" });
+    }
+  });
+
+  // Get all redemption transactions for admin
+  app.get('/api/admin/redemptions', isAdmin, async (req, res) => {
+    try {
+      // Get all redemption transactions
+      const redemptions = await storage.getAllRedemptions();
+      
+      res.json(redemptions);
+    } catch (error) {
+      console.error("Error fetching admin redemptions:", error);
+      res.status(500).json({ message: "Failed to fetch redemptions" });
+    }
+  });
+
+  // Update credit purchase request with admin URL
+  app.patch('/api/admin/credit-purchases/:id', isAdmin, async (req, res) => {
+    try {
+      const requestId = parseInt(req.params.id);
+      const { adminUrl } = req.body;
+      
+      await storage.updateCreditPurchaseRequest(requestId, { adminUrl });
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error updating credit purchase request:", error);
+      res.status(500).json({ message: "Failed to update request" });
+    }
+  });
+
+  // Update redemption transaction with admin URL
+  app.patch('/api/admin/redemptions/:id', isAdmin, async (req, res) => {
+    try {
+      const transactionId = parseInt(req.params.id);
+      const { adminUrl } = req.body;
+      
+      await db
+        .update(transactions)
+        .set({ adminUrl })
+        .where(eq(transactions.id, transactionId));
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error updating redemption transaction:", error);
+      res.status(500).json({ message: "Failed to update transaction" });
     }
   });
 

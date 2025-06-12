@@ -127,6 +127,22 @@ export async function setupAuth(app: Express) {
   });
 }
 
+// Admin authentication middleware
+export const isAdmin: RequestHandler = async (req, res, next) => {
+  if (!req.isAuthenticated() || !req.user) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const user = req.user as any;
+  
+  // Check if user is admin (either by username or ID)
+  if (user.username === 'admin' || user.id === 'admin') {
+    return next();
+  }
+
+  return res.status(403).json({ message: "Admin access required" });
+};
+
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   if (!req.isAuthenticated() || !req.user) {
     return res.status(401).json({ message: "Unauthorized" });

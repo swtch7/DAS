@@ -41,6 +41,10 @@ export interface IStorage {
   getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined>;
   markTokenAsUsed(token: string): Promise<void>;
   updateUserPassword(userId: string, passwordHash: string): Promise<void>;
+  
+  // Admin operations
+  getAllRedemptions(): Promise<any[]>;
+  updateTransactionAdminUrl(transactionId: number, adminUrl: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -168,6 +172,37 @@ export class DatabaseStorage implements IStorage {
       .update(users)
       .set({ passwordHash, updatedAt: new Date() })
       .where(eq(users.id, userId));
+  }
+
+  // Admin operations
+  async getAllRedemptions(): Promise<any[]> {
+    const redemptions = await db
+      .select({
+        id: transactions.id,
+        userId: transactions.userId,
+        amount: transactions.amount,
+        usdValue: transactions.usdValue,
+        description: transactions.description,
+        status: transactions.status,
+        adminUrl: transactions.adminUrl,
+        createdAt: transactions.createdAt,
+        userEmail: users.email,
+        userFirstName: users.firstName,
+        userLastName: users.lastName
+      })
+      .from(transactions)
+      .leftJoin(users, eq(transactions.userId, users.id))
+      .where(eq(transactions.type, 'redemption'))
+      .orderBy(desc(transactions.createdAt));
+    
+    return redemptions;
+  }
+
+  async updateTransactionAdminUrl(transactionId: number, adminUrl: string): Promise<void> {
+    await db
+      .update(transactions)
+      .set({ adminUrl })
+      .where(eq(transactions.id, transactionId));
   }
 }
 
