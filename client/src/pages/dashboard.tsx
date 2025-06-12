@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Gamepad2, 
   Bell, 
@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import CreditPurchaseModal from "@/components/credit-purchase-modal";
 import RedeemModal from "@/components/redeem-modal";
-import PurchaseTrackerModal from "@/components/purchase-tracker-modal";
+import PurchaseTrackerSidebar from "@/components/purchase-tracker-sidebar";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -35,6 +35,20 @@ export default function Dashboard() {
     creditsRequested: number;
     usdAmount: string;
   } | null>(null);
+
+  // Check for existing active purchase on load
+  useEffect(() => {
+    const activePurchase = localStorage.getItem('activePurchase');
+    if (activePurchase) {
+      try {
+        const purchase = JSON.parse(activePurchase);
+        setLatestPurchase(purchase);
+        setShowTracker(true);
+      } catch (error) {
+        localStorage.removeItem('activePurchase');
+      }
+    }
+  }, []);
 
   // Fetch user data
   const { data: userData, isLoading: userLoading } = useQuery({
@@ -320,6 +334,7 @@ export default function Dashboard() {
         onPurchaseSubmitted={(purchase) => {
           setLatestPurchase(purchase);
           setShowTracker(true);
+          localStorage.setItem('activePurchase', JSON.stringify(purchase));
         }}
       />
       <RedeemModal 
@@ -327,15 +342,30 @@ export default function Dashboard() {
         onClose={() => setShowRedeemModal(false)}
         userCredits={credits}
       />
-      {latestPurchase && (
-        <PurchaseTrackerModal
-          isOpen={showTracker}
-          onClose={() => setShowTracker(false)}
-          purchaseId={latestPurchase.id}
-          creditsRequested={latestPurchase.creditsRequested}
-          usdAmount={latestPurchase.usdAmount}
-        />
+
+      {/* Purchase Tracker Sidebar */}
+      {showTracker && latestPurchase && (
+        <div className="fixed top-0 right-0 h-full z-50">
+          <PurchaseTrackerSidebar
+            purchaseId={latestPurchase.id}
+            creditsRequested={latestPurchase.creditsRequested}
+            usdAmount={latestPurchase.usdAmount}
+            onComplete={() => {
+              setShowTracker(false);
+              setLatestPurchase(null);
+              localStorage.removeItem('activePurchase');
+              queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+              queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+            }}
+            onClose={() => {
+              setShowTracker(false);
+              setLatestPurchase(null);
+              localStorage.removeItem('activePurchase');
+            }}
+          />
+        </div>
       )}
+
     </div>
   );
 }
