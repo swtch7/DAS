@@ -316,13 +316,26 @@ export default function Dashboard() {
       {/* Modals */}
       <CreditPurchaseModal 
         isOpen={showBuyModal} 
-        onClose={() => setShowBuyModal(false)} 
+        onClose={() => setShowBuyModal(false)}
+        onPurchaseSubmitted={(purchase) => {
+          setLatestPurchase(purchase);
+          setShowTracker(true);
+        }}
       />
       <RedeemModal 
         isOpen={showRedeemModal} 
         onClose={() => setShowRedeemModal(false)}
         userCredits={credits}
       />
+      {latestPurchase && (
+        <PurchaseTrackerModal
+          isOpen={showTracker}
+          onClose={() => setShowTracker(false)}
+          purchaseId={latestPurchase.id}
+          creditsRequested={latestPurchase.creditsRequested}
+          usdAmount={latestPurchase.usdAmount}
+        />
+      )}
     </div>
   );
 }

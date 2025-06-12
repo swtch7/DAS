@@ -29,14 +29,25 @@ export default function CreditPurchaseModal({ isOpen, onClose, onPurchaseSubmitt
 
   const purchaseMutation = useMutation({
     mutationFn: async (data: { creditsRequested: number; usdAmount: number }) => {
-      await apiRequest("POST", "/api/credit-purchase", data);
+      const response = await apiRequest("POST", "/api/credit-purchase", data);
+      return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (purchaseData) => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+      
+      // Trigger the purchase tracker
+      if (onPurchaseSubmitted && purchaseData) {
+        onPurchaseSubmitted({
+          id: purchaseData.id,
+          creditsRequested: purchaseData.creditsRequested,
+          usdAmount: purchaseData.usdAmount
+        });
+      }
+      
       toast({
         title: "Purchase request submitted!",
-        description: "You'll receive an SMS with payment instructions within 5 minutes.",
+        description: "Track your purchase progress in the popup window.",
       });
       onClose();
       setSelectedAmount("");
