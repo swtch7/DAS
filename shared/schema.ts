@@ -53,6 +53,7 @@ export const transactions = pgTable("transactions", {
   usdValue: decimal("usd_value", { precision: 10, scale: 2 }),
   status: varchar("status").default("pending"), // 'pending', 'completed', 'failed'
   description: text("description"),
+  adminUrl: varchar("admin_url"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -74,6 +75,7 @@ export const creditPurchaseRequests = pgTable("credit_purchase_requests", {
   usdAmount: decimal("usd_amount", { precision: 10, scale: 2 }).notNull(),
   status: varchar("status").default("pending"), // 'pending', 'payment_link_sent', 'completed'
   cashappLink: text("cashapp_link"),
+  adminUrl: varchar("admin_url"),
   sheetRowId: varchar("sheet_row_id"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
