@@ -972,6 +972,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Admin Routes
   
+  // Get admin statistics
+  app.get('/api/admin/stats', isAdmin, async (req, res) => {
+    try {
+      const stats = await storage.getUserStats();
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching admin stats:', error);
+      res.status(500).json({ message: 'Failed to fetch admin stats' });
+    }
+  });
+  
   // Get all credit purchase requests for admin
   app.get('/api/admin/credit-purchases', isAdmin, async (req, res) => {
     try {
@@ -1025,6 +1036,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating credit purchase request:", error);
       res.status(500).json({ message: "Failed to update request" });
+    }
+  });
+
+  // Confirm payment completion
+  app.patch('/api/admin/credit-purchases/:id/confirm', isAdmin, async (req, res) => {
+    try {
+      const requestId = parseInt(req.params.id);
+      
+      const request = await storage.getCreditRequestById(requestId);
+      if (!request) {
+        return res.status(404).json({ message: "Request not found" });
+      }
+      
+      // Update request status to completed
+      await storage.updateCreditPurchaseRequest(requestId, { status: 'completed' });
+      
+      // Add credits to user account
+      const user = await storage.getUser(request.userId);
+      if (user) {
+        const newCredits = (user.credits || 0) + request.creditsRequested;
+        await storage.updateUserCredits(request.userId, newCredits);
+        
+        // Send SMS confirmation
+        if (user.phone) {
+          const message = `Payment confirmed! ${request.creditsRequested} credits added to your DAS Gaming account. New balance: ${newCredits} credits.`;
+          await sendSMS(user.phone, message);
+        }
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error confirming payment:", error);
+      res.status(500).json({ message: "Failed to confirm payment" });
     }
   });
 
