@@ -158,16 +158,16 @@ function generateGameCredentials(user: any) {
 // Setup local authentication strategy
 function setupLocalAuth(app: Express) {
   passport.use(new LocalStrategy(
-    { usernameField: 'username', passwordField: 'password' },
-    async (username, password, done) => {
+    { usernameField: 'email', passwordField: 'password' },
+    async (email, password, done) => {
       try {
-        console.log('Authenticating user:', username);
+        console.log('Authenticating user:', email);
         // Check if it's an email or username
         let user;
-        if (username.includes('@')) {
-          user = await storage.getUserByEmail(username);
+        if (email.includes('@')) {
+          user = await storage.getUserByEmail(email);
         } else {
-          user = await storage.getUserByUsername(username);
+          user = await storage.getUserByUsername(email);
         }
         
         console.log('User found:', user ? 'yes' : 'no');
@@ -257,19 +257,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/auth/login', (req, res, next) => {
-    console.log('Login attempt:', req.body);
-    passport.authenticate('local', (err: any, user: any, info: any) => {
-      console.log('Auth result:', { err, user: user ? 'found' : 'not found', info });
-      if (err) {
-        console.error('Authentication error:', err);
-        return res.status(500).json({ message: "Authentication error" });
-      }
-      if (!user) {
-        console.log('No user found:', info);
-        return res.status(400).json({ message: info?.message || "Invalid credentials" });
+  app.post('/api/auth/login', async (req, res) => {
+    try {
+      console.log('Login attempt:', req.body);
+      const { email, password } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
       }
       
+      // Direct authentication without passport for now
+      let user;
+      if (email.includes('@')) {
+        user = await storage.getUserByEmail(email);
+      } else {
+        user = await storage.getUserByUsername(email);
+      }
+      
+      console.log('User found:', user ? 'yes' : 'no');
+      
+      if (!user || !user.passwordHash) {
+        return res.status(400).json({ message: "Invalid credentials" });
+      }
+      
+      const isValid = await bcrypt.compare(password, user.passwordHash);
+      console.log('Password valid:', isValid);
+      
+      if (!isValid) {
+        return res.status(400).json({ message: "Invalid credentials" });
+      }
+      
+      // Manual session creation
       req.logIn(user, (err) => {
         if (err) {
           console.error('Login error:', err);
@@ -278,7 +296,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('Login successful for user:', user.username || user.email);
         res.json({ success: true, user: { ...user, passwordHash: undefined } });
       });
-    })(req, res, next);
+    } catch (error) {
+      console.error('Login error:', error);
+      res.status(500).json({ message: "Login failed" });
+    }
   });
 
   app.post('/api/auth/logout', (req, res) => {
