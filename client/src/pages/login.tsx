@@ -120,6 +120,12 @@ export default function Login() {
             </form>
 
             <div className="text-center text-sm text-gray-400">
+              <Link href="/forgot-password">
+                <a className="text-primary hover:underline">Forgot your password?</a>
+              </Link>
+            </div>
+
+            <div className="text-center text-sm text-gray-400">
               Don't have an account?{" "}
               <Link href="/register">
                 <a className="text-primary hover:underline">Create one here</a>
