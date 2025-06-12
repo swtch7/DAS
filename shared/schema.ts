@@ -40,6 +40,7 @@ export const users = pgTable("users", {
   username: varchar("username").unique(),
   passwordHash: varchar("password_hash"),
   authType: varchar("auth_type").default("google"), // 'google' or 'manual'
+  lastLoginAt: timestamp("last_login_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

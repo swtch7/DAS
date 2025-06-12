@@ -13,7 +13,7 @@ import {
   type InsertPasswordResetToken,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 
 export interface IStorage {
   // User operations - required for Replit Auth
@@ -45,6 +45,8 @@ export interface IStorage {
   // Admin operations
   getAllRedemptions(): Promise<any[]>;
   updateTransactionAdminUrl(transactionId: number, adminUrl: string): Promise<void>;
+  getUserStats(): Promise<{ totalUsers: number; recentLogins: any[]; newUsersThisWeek: number; }>;
+  updateUserLastLogin(userId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -203,6 +205,47 @@ export class DatabaseStorage implements IStorage {
       .update(transactions)
       .set({ adminUrl })
       .where(eq(transactions.id, transactionId));
+  }
+
+  async getUserStats(): Promise<{ totalUsers: number; recentLogins: any[]; newUsersThisWeek: number; }> {
+    const totalUsersResult = await db.select().from(users);
+    const totalUsers = totalUsersResult.length;
+    
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    
+    const allUsers = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        lastLoginAt: users.lastLoginAt,
+        createdAt: users.createdAt
+      })
+      .from(users)
+      .orderBy(desc(users.lastLoginAt));
+    
+    const recentLogins = allUsers
+      .filter(user => user.lastLoginAt != null)
+      .slice(0, 10);
+    
+    const newUsersThisWeek = allUsers
+      .filter(user => user.createdAt && user.createdAt >= oneWeekAgo)
+      .length;
+    
+    return {
+      totalUsers,
+      recentLogins,
+      newUsersThisWeek
+    };
+  }
+
+  async updateUserLastLogin(userId: string): Promise<void> {
+    await db
+      .update(users)
+      .set({ lastLoginAt: new Date() })
+      .where(eq(users.id, userId));
   }
 }
 

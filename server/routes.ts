@@ -287,6 +287,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid credentials" });
       }
       
+      // Update last login time
+      await storage.updateUserLastLogin(user.id);
+      
       // Manual session creation
       req.logIn(user, (err) => {
         if (err) {
