@@ -10,6 +10,7 @@ import bcrypt from "bcryptjs";
 import { nanoid } from "nanoid";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
+import nodemailer from "nodemailer";
 
 // Google Sheets setup
 const sheets = google.sheets('v4');
@@ -20,6 +21,17 @@ const twilioClient = twilio(
   process.env.TWILIO_ACCOUNT_SID || process.env.TWILIO_SID,
   process.env.TWILIO_AUTH_TOKEN || process.env.TWILIO_TOKEN
 );
+
+// Email setup
+const emailTransporter = nodemailer.createTransport({
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
 
 // Helper function to authenticate with Google Sheets
 async function getAuthenticatedSheetsClient() {
@@ -79,6 +91,25 @@ async function getAuthenticatedSheetsClient() {
   } catch (error) {
     console.error('Error in getAuthenticatedSheetsClient:', error);
     throw error;
+  }
+}
+
+// Helper function to send email
+async function sendEmail(to: string, subject: string, html: string) {
+  try {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.log('Email would be sent:', { to, subject });
+      return;
+    }
+
+    await emailTransporter.sendMail({
+      from: `"DAS Gaming" <${process.env.EMAIL_USER}>`,
+      to,
+      subject,
+      html
+    });
+  } catch (error) {
+    console.error('Failed to send email:', error);
   }
 }
 
@@ -567,11 +598,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         expiresAt,
       });
 
-      // Send SMS with reset link (since we have SMS capability)
+      // Send SMS with reset link (primary method)
+      const resetLink = `${req.protocol}://${req.hostname}/reset-password?token=${token}`;
+      
       if (user.phone) {
-        const resetLink = `${req.protocol}://${req.hostname}/reset-password?token=${token}`;
         const message = `DAS Gaming password reset: ${resetLink} (expires in 1 hour)`;
         await sendSMS(user.phone, message);
+      } else {
+        // Fallback to email if no phone number
+        const emailHtml = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #1a1a1a; color: white; padding: 20px; border-radius: 8px;">
+            <h2 style="color: #f39c12; text-align: center;">DAS Gaming - Password Reset</h2>
+            <p>You requested a password reset for your DAS Gaming account.</p>
+            <p>Click the button below to reset your password:</p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${resetLink}" style="background-color: #f39c12; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">Reset Password</a>
+            </div>
+            <p style="color: #ccc; font-size: 14px;">If the button doesn't work, copy and paste this link into your browser:</p>
+            <p style="color: #f39c12; word-break: break-all; font-size: 14px;">${resetLink}</p>
+            <p style="color: #ccc; font-size: 12px; margin-top: 30px;">This link will expire in 1 hour. If you didn't request this reset, please ignore this email.</p>
+          </div>
+        `;
+        
+        await sendEmail(user.email!, "DAS Gaming - Password Reset", emailHtml);
       }
 
       res.json({ message: "If an account with that email exists, a reset link has been sent." });
