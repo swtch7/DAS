@@ -1096,6 +1096,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get specific credit purchase status for tracking
+  app.get('/api/credit-purchase/:id/status', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || req.user?.id;
+      const purchaseId = parseInt(req.params.id);
+      
+      const purchase = await storage.getCreditRequestById(purchaseId);
+      if (!purchase) {
+        return res.status(404).json({ message: "Purchase not found" });
+      }
+      
+      // Verify the purchase belongs to the authenticated user
+      if (purchase.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      res.json({
+        id: purchase.id,
+        status: purchase.status,
+        adminUrl: purchase.adminUrl,
+        creditsRequested: purchase.creditsRequested,
+        usdAmount: purchase.usdAmount,
+        createdAt: purchase.createdAt,
+        updatedAt: purchase.updatedAt
+      });
+    } catch (error) {
+      console.error("Error fetching purchase status:", error);
+      res.status(500).json({ message: "Failed to fetch purchase status" });
+    }
+  });
+
   // Update redemption transaction with admin URL
   app.patch('/api/admin/redemptions/:id', isAdmin, async (req, res) => {
     try {

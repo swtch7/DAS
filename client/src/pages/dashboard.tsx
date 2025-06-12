@@ -22,12 +22,19 @@ import {
 } from "lucide-react";
 import CreditPurchaseModal from "@/components/credit-purchase-modal";
 import RedeemModal from "@/components/redeem-modal";
+import PurchaseTrackerModal from "@/components/purchase-tracker-modal";
 
 export default function Dashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [showBuyModal, setShowBuyModal] = useState(false);
   const [showRedeemModal, setShowRedeemModal] = useState(false);
+  const [showTracker, setShowTracker] = useState(false);
+  const [latestPurchase, setLatestPurchase] = useState<{
+    id: number;
+    creditsRequested: number;
+    usdAmount: string;
+  } | null>(null);
 
   // Fetch user data
   const { data: userData, isLoading: userLoading } = useQuery({

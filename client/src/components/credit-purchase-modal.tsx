@@ -12,6 +12,7 @@ import { X } from "lucide-react";
 interface CreditPurchaseModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onPurchaseSubmitted?: (purchase: { id: number; creditsRequested: number; usdAmount: string }) => void;
 }
 
 const predefinedAmounts = [
@@ -21,7 +22,7 @@ const predefinedAmounts = [
   { credits: 10000, usd: 100.00 },
 ];
 
-export default function CreditPurchaseModal({ isOpen, onClose }: CreditPurchaseModalProps) {
+export default function CreditPurchaseModal({ isOpen, onClose, onPurchaseSubmitted }: CreditPurchaseModalProps) {
   const [selectedAmount, setSelectedAmount] = useState<string>("");
   const [customCredits, setCustomCredits] = useState<string>("");
   const { toast } = useToast();
