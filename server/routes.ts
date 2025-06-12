@@ -126,8 +126,11 @@ async function sendSMS(to: string, message: string) {
       from: process.env.TWILIO_PHONE_NUMBER,
       to: to,
     });
+    console.log('SMS sent successfully to:', to);
   } catch (error) {
     console.error('Failed to send SMS:', error);
+    // For testing purposes, log the message that would have been sent
+    console.log('SMS message that failed to send:', { to, message });
   }
 }
 
