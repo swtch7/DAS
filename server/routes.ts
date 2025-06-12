@@ -986,7 +986,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all credit purchase requests for admin
   app.get('/api/admin/credit-purchases', isAdmin, async (req, res) => {
     try {
-      const requests = await storage.getPendingCreditRequests();
+      const requests = await storage.getAllCreditRequests();
       
       // Get user information for each request
       const requestsWithUsers = await Promise.all(

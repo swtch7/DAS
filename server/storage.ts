@@ -34,6 +34,7 @@ export interface IStorage {
   createCreditPurchaseRequest(request: InsertCreditPurchaseRequest): Promise<CreditPurchaseRequest>;
   updateCreditPurchaseRequest(id: number, updates: Partial<CreditPurchaseRequest>): Promise<CreditPurchaseRequest>;
   getPendingCreditRequests(): Promise<CreditPurchaseRequest[]>;
+  getAllCreditRequests(): Promise<CreditPurchaseRequest[]>;
   getCreditRequestById(id: number): Promise<CreditPurchaseRequest | undefined>;
   
   // Password reset operations
@@ -116,6 +117,13 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(creditPurchaseRequests)
       .where(eq(creditPurchaseRequests.status, "pending"));
+  }
+
+  async getAllCreditRequests(): Promise<CreditPurchaseRequest[]> {
+    return await db
+      .select()
+      .from(creditPurchaseRequests)
+      .orderBy(desc(creditPurchaseRequests.createdAt));
   }
 
   async getCreditRequestById(id: number): Promise<CreditPurchaseRequest | undefined> {
