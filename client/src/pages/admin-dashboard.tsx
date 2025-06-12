@@ -40,287 +40,384 @@ interface RedemptionTransaction {
   userLastName?: string;
 }
 
+interface AdminStats {
+  totalUsers: number;
+  recentLogins: Array<{
+    id: string;
+    email: string;
+    firstName?: string;
+    lastName?: string;
+    lastLoginAt?: string;
+    createdAt: string;
+  }>;
+  newUsersThisWeek: number;
+}
+
 export default function AdminDashboard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [urlInputs, setUrlInputs] = useState<Record<string, string>>({});
 
+  // Fetch admin statistics
+  const { data: adminStats, isLoading: loadingStats } = useQuery<AdminStats>({
+    queryKey: ["/api/admin/stats"],
+  });
+
   // Fetch credit purchase requests
-  const { data: creditRequests = [], isLoading: loadingRequests } = useQuery({
+  const { data: creditRequests = [], isLoading: loadingRequests } = useQuery<CreditPurchaseRequest[]>({
     queryKey: ["/api/admin/credit-purchases"],
   });
 
-  // Fetch redemption transactions
-  const { data: redemptions = [], isLoading: loadingRedemptions } = useQuery({
+  // Fetch redemption requests
+  const { data: redemptions = [], isLoading: loadingRedemptions } = useQuery<RedemptionTransaction[]>({
     queryKey: ["/api/admin/redemptions"],
   });
 
-  // Update credit purchase request URL
-  const updateCreditRequestMutation = useMutation({
-    mutationFn: async ({ id, adminUrl }: { id: number; adminUrl: string }) => {
-      await apiRequest("PATCH", `/api/admin/credit-purchases/${id}`, { adminUrl });
+  // Update admin URL mutation
+  const updateUrlMutation = useMutation({
+    mutationFn: async ({ id, adminUrl, type }: { id: number; adminUrl: string; type: 'purchase' | 'redemption' }) => {
+      const endpoint = type === 'purchase' 
+        ? `/api/admin/credit-purchases/${id}`
+        : `/api/admin/redemptions/${id}`;
+      return apiRequest(endpoint, "PATCH", { adminUrl });
     },
     onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Admin URL updated successfully",
+      });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/credit-purchases"] });
-      toast({
-        title: "URL updated",
-        description: "Credit purchase request URL has been saved",
-      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/redemptions"] });
     },
-    onError: (error) => {
+    onError: () => {
       toast({
-        title: "Update failed",
-        description: error.message,
+        title: "Error",
+        description: "Failed to update admin URL",
         variant: "destructive",
       });
     },
   });
 
-  // Update redemption transaction URL
-  const updateRedemptionMutation = useMutation({
-    mutationFn: async ({ id, adminUrl }: { id: number; adminUrl: string }) => {
-      await apiRequest("PATCH", `/api/admin/redemptions/${id}`, { adminUrl });
+  // Confirm payment mutation
+  const confirmPaymentMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest(`/api/admin/credit-purchases/${id}/confirm`, "PATCH");
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/redemptions"] });
       toast({
-        title: "URL updated",
-        description: "Redemption transaction URL has been saved",
+        title: "Payment Confirmed",
+        description: "Credits have been added to user account and SMS sent",
       });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/credit-purchases"] });
     },
-    onError: (error) => {
+    onError: () => {
       toast({
-        title: "Update failed",
-        description: error.message,
+        title: "Error",
+        description: "Failed to confirm payment",
         variant: "destructive",
       });
     },
   });
 
-  const handleUrlChange = (type: string, id: number, value: string) => {
-    setUrlInputs(prev => ({ ...prev, [`${type}-${id}`]: value }));
-  };
-
-  const handleSaveUrl = (type: 'credit' | 'redemption', id: number) => {
-    const url = urlInputs[`${type}-${id}`];
-    if (!url?.trim()) {
+  const handleUpdateUrl = (id: number, type: 'purchase' | 'redemption') => {
+    const key = `${type}-${id}`;
+    const adminUrl = urlInputs[key];
+    if (!adminUrl?.trim()) {
       toast({
-        title: "URL required",
-        description: "Please enter a valid URL",
+        title: "Error",
+        description: "Please enter an admin URL",
         variant: "destructive",
       });
       return;
     }
-
-    if (type === 'credit') {
-      updateCreditRequestMutation.mutate({ id, adminUrl: url.trim() });
-    } else {
-      updateRedemptionMutation.mutate({ id, adminUrl: url.trim() });
-    }
+    updateUrlMutation.mutate({ id, adminUrl: adminUrl.trim(), type });
   };
 
-  const getStatusBadge = (status: string) => {
-    const statusMap = {
-      pending: { label: "Pending", className: "bg-yellow-600" },
-      processing: { label: "Processing", className: "bg-blue-600" },
-      completed: { label: "Completed", className: "bg-green-600" },
-      failed: { label: "Failed", className: "bg-red-600" },
-      payment_link_sent: { label: "Link Sent", className: "bg-purple-600" },
-    };
-    
-    const config = statusMap[status as keyof typeof statusMap] || { label: status, className: "bg-gray-600" };
-    return <Badge className={config.className}>{config.label}</Badge>;
+  const handleConfirmPayment = (id: number) => {
+    confirmPaymentMutation.mutate(id);
+  };
+
+  const handleUrlInputChange = (key: string, value: string) => {
+    setUrlInputs(prev => ({ ...prev, [key]: value }));
   };
 
   return (
-    <div className="min-h-screen bg-dark-bg p-6">
+    <div className="min-h-screen bg-gradient-to-b from-zinc-900 to-black text-white p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Admin Dashboard</h1>
-          <p className="text-gray-400">Manage credit purchases and redemptions</p>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
+            Admin Dashboard
+          </h1>
+          <p className="text-zinc-400 mt-2">Manage users, credit requests, and system statistics</p>
         </div>
 
-        <Tabs defaultValue="buy" className="space-y-6">
-          <TabsList className="bg-surface border-gray-700">
-            <TabsTrigger value="buy" className="data-[state=active]:bg-primary">
-              <DollarSign className="h-4 w-4 mr-2" />
+        <Tabs defaultValue="stats" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3 bg-zinc-800 border-zinc-700">
+            <TabsTrigger value="stats" className="data-[state=active]:bg-yellow-600">
+              Statistics
+            </TabsTrigger>
+            <TabsTrigger value="buy" className="data-[state=active]:bg-yellow-600">
               Buy Credits
             </TabsTrigger>
-            <TabsTrigger value="redeem" className="data-[state=active]:bg-primary">
-              <CreditCard className="h-4 w-4 mr-2" />
+            <TabsTrigger value="redeem" className="data-[state=active]:bg-yellow-600">
               Redeem Credits
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="buy">
-            <Card className="bg-surface border-gray-700">
+          <TabsContent value="stats" className="space-y-6">
+            {loadingStats ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400 mx-auto"></div>
+                <p className="mt-2 text-zinc-400">Loading statistics...</p>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <Card className="bg-zinc-800 border-zinc-700">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium text-zinc-200">Total Users</CardTitle>
+                      <Users className="h-4 w-4 text-yellow-400" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-white">{adminStats?.totalUsers || 0}</div>
+                      <p className="text-xs text-zinc-400">Registered accounts</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-zinc-800 border-zinc-700">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium text-zinc-200">New Users (7 days)</CardTitle>
+                      <TrendingUp className="h-4 w-4 text-green-400" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-white">{adminStats?.newUsersThisWeek || 0}</div>
+                      <p className="text-xs text-zinc-400">New registrations</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-zinc-800 border-zinc-700">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium text-zinc-200">Active Requests</CardTitle>
+                      <CreditCard className="h-4 w-4 text-orange-400" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-white">
+                        {creditRequests.filter(r => r.status === 'pending').length}
+                      </div>
+                      <p className="text-xs text-zinc-400">Pending purchases</p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <Card className="bg-zinc-800 border-zinc-700">
+                  <CardHeader>
+                    <CardTitle className="text-zinc-200 flex items-center gap-2">
+                      <Clock className="h-5 w-5 text-yellow-400" />
+                      Recent User Activity
+                    </CardTitle>
+                    <CardDescription className="text-zinc-400">
+                      Latest user logins and account activity
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {adminStats?.recentLogins?.length ? (
+                        adminStats.recentLogins.map((user) => (
+                          <div key={user.id} className="flex items-center justify-between p-3 bg-zinc-700 rounded-lg">
+                            <div>
+                              <p className="text-white font-medium">
+                                {user.firstName && user.lastName 
+                                  ? `${user.firstName} ${user.lastName}` 
+                                  : user.email}
+                              </p>
+                              <p className="text-zinc-400 text-sm">{user.email}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-zinc-300 text-sm">
+                                {user.lastLoginAt 
+                                  ? `Last login: ${formatDistanceToNow(new Date(user.lastLoginAt))} ago`
+                                  : 'Never logged in'}
+                              </p>
+                              <p className="text-zinc-500 text-xs">
+                                Joined: {formatDistanceToNow(new Date(user.createdAt))} ago
+                              </p>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-zinc-400 text-center py-4">No recent activity</p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            )}
+          </TabsContent>
+
+          <TabsContent value="buy" className="space-y-6">
+            <Card className="bg-zinc-800 border-zinc-700">
               <CardHeader>
-                <CardTitle className="text-white flex items-center space-x-2">
-                  <DollarSign className="h-5 w-5" />
-                  <span>Credit Purchase Requests</span>
+                <CardTitle className="text-zinc-200 flex items-center gap-2">
+                  <DollarSign className="h-5 w-5 text-green-400" />
+                  Credit Purchase Requests
                 </CardTitle>
+                <CardDescription className="text-zinc-400">
+                  Manage user credit purchase requests and payment confirmations
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 {loadingRequests ? (
                   <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                    <p className="text-gray-400 mt-2">Loading requests...</p>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400 mx-auto"></div>
+                    <p className="mt-2 text-zinc-400">Loading requests...</p>
                   </div>
-                ) : !creditRequests?.length ? (
-                  <div className="text-center py-8">
-                    <p className="text-gray-400">No credit purchase requests found</p>
-                  </div>
-                ) : (
+                ) : creditRequests.length > 0 ? (
                   <div className="space-y-4">
                     {creditRequests.map((request: CreditPurchaseRequest) => (
-                      <div key={request.id} className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-                        <div className="flex justify-between items-start mb-4">
+                      <div key={request.id} className="border border-zinc-600 rounded-lg p-4 bg-zinc-700">
+                        <div className="flex justify-between items-start mb-3">
                           <div>
-                            <h3 className="text-white font-semibold">
-                              {request.user?.firstName} {request.user?.lastName}
+                            <h3 className="font-semibold text-white">
+                              {request.user?.firstName && request.user?.lastName
+                                ? `${request.user.firstName} ${request.user.lastName}`
+                                : request.user?.email || 'Unknown User'}
                             </h3>
-                            <p className="text-gray-400 text-sm">{request.user?.email}</p>
-                            <p className="text-gray-400 text-sm">
-                              {format(new Date(request.createdAt), 'MMM dd, yyyy at h:mm a')}
+                            <p className="text-zinc-400 text-sm">{request.user?.email}</p>
+                            <p className="text-zinc-300 text-sm">
+                              {request.creditsRequested} credits (${request.usdAmount})
                             </p>
                           </div>
-                          {getStatusBadge(request.status)}
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-4 mb-4">
-                          <div>
-                            <p className="text-gray-400 text-sm">Credits Requested</p>
-                            <p className="text-white font-semibold">{request.creditsRequested.toLocaleString()}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-400 text-sm">USD Amount</p>
-                            <p className="text-white font-semibold">${request.usdAmount}</p>
+                          <div className="text-right">
+                            <Badge variant={request.status === 'completed' ? 'default' : 'secondary'}>
+                              {request.status}
+                            </Badge>
+                            <p className="text-zinc-400 text-xs mt-1">
+                              {formatDistanceToNow(new Date(request.createdAt))} ago
+                            </p>
                           </div>
                         </div>
 
-                        <div className="flex space-x-2">
-                          <div className="flex-1">
-                            <Input
-                              placeholder={request.adminUrl || "Add payment URL"}
-                              value={urlInputs[`credit-${request.id}`] || request.adminUrl || ''}
-                              onChange={(e) => handleUrlChange('credit', request.id, e.target.value)}
-                              className="bg-gray-700 border-gray-600 text-white"
-                            />
-                          </div>
-                          <Button
-                            onClick={() => handleSaveUrl('credit', request.id)}
-                            disabled={updateCreditRequestMutation.isPending}
-                            className="bg-primary hover:bg-primary/80"
-                          >
-                            <Save className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        
                         {request.adminUrl && (
-                          <div className="mt-2">
-                            <a
-                              href={request.adminUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-primary hover:underline text-sm flex items-center space-x-1"
-                            >
-                              <Link className="h-3 w-3" />
-                              <span>View Payment Link</span>
+                          <div className="mb-3 p-2 bg-zinc-600 rounded text-sm">
+                            <strong className="text-zinc-300">Admin URL:</strong>
+                            <br />
+                            <a href={request.adminUrl} target="_blank" rel="noopener noreferrer" 
+                               className="text-yellow-400 hover:underline break-all">
+                              {request.adminUrl}
                             </a>
                           </div>
                         )}
+
+                        <div className="space-y-3">
+                          <div className="flex gap-2">
+                            <Input
+                              placeholder="Enter admin URL"
+                              value={urlInputs[`purchase-${request.id}`] || ''}
+                              onChange={(e) => handleUrlInputChange(`purchase-${request.id}`, e.target.value)}
+                              className="bg-zinc-600 border-zinc-500 text-white flex-1"
+                            />
+                            <Button
+                              onClick={() => handleUpdateUrl(request.id, 'purchase')}
+                              disabled={updateUrlMutation.isPending}
+                              className="bg-blue-600 hover:bg-blue-700"
+                            >
+                              Update URL
+                            </Button>
+                          </div>
+
+                          {request.adminUrl && request.status !== 'completed' && (
+                            <Button
+                              onClick={() => handleConfirmPayment(request.id)}
+                              disabled={confirmPaymentMutation.isPending}
+                              className="w-full bg-green-600 hover:bg-green-700 flex items-center gap-2"
+                            >
+                              <CheckCircle className="h-4 w-4" />
+                              Confirm Payment Complete
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
+                ) : (
+                  <p className="text-zinc-400 text-center py-8">No credit purchase requests found</p>
                 )}
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="redeem">
-            <Card className="bg-surface border-gray-700">
+          <TabsContent value="redeem" className="space-y-6">
+            <Card className="bg-zinc-800 border-zinc-700">
               <CardHeader>
-                <CardTitle className="text-white flex items-center space-x-2">
-                  <CreditCard className="h-5 w-5" />
-                  <span>Credit Redemption Requests</span>
-                </CardTitle>
+                <CardTitle className="text-zinc-200">Credit Redemption Requests</CardTitle>
+                <CardDescription className="text-zinc-400">
+                  Manage user credit redemption requests and payment processing
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 {loadingRedemptions ? (
                   <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                    <p className="text-gray-400 mt-2">Loading redemptions...</p>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400 mx-auto"></div>
+                    <p className="mt-2 text-zinc-400">Loading redemptions...</p>
                   </div>
-                ) : !redemptions?.length ? (
-                  <div className="text-center py-8">
-                    <p className="text-gray-400">No redemption requests found</p>
-                  </div>
-                ) : (
+                ) : redemptions.length > 0 ? (
                   <div className="space-y-4">
                     {redemptions.map((redemption: RedemptionTransaction) => (
-                      <div key={redemption.id} className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-                        <div className="flex justify-between items-start mb-4">
+                      <div key={redemption.id} className="border border-zinc-600 rounded-lg p-4 bg-zinc-700">
+                        <div className="flex justify-between items-start mb-3">
                           <div>
-                            <h3 className="text-white font-semibold">
-                              {redemption.userFirstName} {redemption.userLastName}
+                            <h3 className="font-semibold text-white">
+                              {redemption.userFirstName && redemption.userLastName
+                                ? `${redemption.userFirstName} ${redemption.userLastName}`
+                                : redemption.userEmail}
                             </h3>
-                            <p className="text-gray-400 text-sm">{redemption.userEmail}</p>
-                            <p className="text-gray-400 text-sm">
-                              {format(new Date(redemption.createdAt), 'MMM dd, yyyy at h:mm a')}
+                            <p className="text-zinc-400 text-sm">{redemption.userEmail}</p>
+                            <p className="text-zinc-300 text-sm">{redemption.description}</p>
+                            <p className="text-zinc-300 text-sm">
+                              {Math.abs(redemption.amount)} credits (${redemption.usdValue})
                             </p>
                           </div>
-                          {getStatusBadge(redemption.status)}
-                        </div>
-                        
-                        <div className="grid grid-cols-3 gap-4 mb-4">
-                          <div>
-                            <p className="text-gray-400 text-sm">Credits Redeemed</p>
-                            <p className="text-white font-semibold">{Math.abs(redemption.amount).toLocaleString()}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-400 text-sm">USD Value</p>
-                            <p className="text-white font-semibold">${redemption.usdValue}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-400 text-sm">Description</p>
-                            <p className="text-white text-sm">{redemption.description}</p>
+                          <div className="text-right">
+                            <Badge variant={redemption.status === 'completed' ? 'default' : 'secondary'}>
+                              {redemption.status}
+                            </Badge>
+                            <p className="text-zinc-400 text-xs mt-1">
+                              {formatDistanceToNow(new Date(redemption.createdAt))} ago
+                            </p>
                           </div>
                         </div>
 
-                        <div className="flex space-x-2">
-                          <div className="flex-1">
-                            <Input
-                              placeholder={redemption.adminUrl || "Add payment confirmation URL"}
-                              value={urlInputs[`redemption-${redemption.id}`] || redemption.adminUrl || ''}
-                              onChange={(e) => handleUrlChange('redemption', redemption.id, e.target.value)}
-                              className="bg-gray-700 border-gray-600 text-white"
-                            />
-                          </div>
-                          <Button
-                            onClick={() => handleSaveUrl('redemption', redemption.id)}
-                            disabled={updateRedemptionMutation.isPending}
-                            className="bg-primary hover:bg-primary/80"
-                          >
-                            <Save className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        
                         {redemption.adminUrl && (
-                          <div className="mt-2">
-                            <a
-                              href={redemption.adminUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-primary hover:underline text-sm flex items-center space-x-1"
-                            >
-                              <Link className="h-3 w-3" />
-                              <span>View Payment Confirmation</span>
+                          <div className="mb-3 p-2 bg-zinc-600 rounded text-sm">
+                            <strong className="text-zinc-300">Admin URL:</strong>
+                            <br />
+                            <a href={redemption.adminUrl} target="_blank" rel="noopener noreferrer" 
+                               className="text-yellow-400 hover:underline break-all">
+                              {redemption.adminUrl}
                             </a>
                           </div>
                         )}
+
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="Enter admin URL"
+                            value={urlInputs[`redemption-${redemption.id}`] || ''}
+                            onChange={(e) => handleUrlInputChange(`redemption-${redemption.id}`, e.target.value)}
+                            className="bg-zinc-600 border-zinc-500 text-white"
+                          />
+                          <Button
+                            onClick={() => handleUpdateUrl(redemption.id, 'redemption')}
+                            disabled={updateUrlMutation.isPending}
+                            className="bg-blue-600 hover:bg-blue-700"
+                          >
+                            Update URL
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
+                ) : (
+                  <p className="text-zinc-400 text-center py-8">No redemption requests found</p>
                 )}
               </CardContent>
             </Card>
