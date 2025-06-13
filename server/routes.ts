@@ -1186,6 +1186,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Serve uploaded photos for admin viewing
+  app.get('/api/admin/photos/:filename', isAdmin, async (req, res) => {
+    try {
+      const filename = req.params.filename;
+      const filePath = path.join(process.cwd(), 'uploads', filename);
+      
+      // Check if file exists
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ message: "Photo not found" });
+      }
+      
+      // Set appropriate content type based on file extension
+      const ext = path.extname(filename).toLowerCase();
+      const contentType = {
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.png': 'image/png',
+        '.gif': 'image/gif',
+        '.webp': 'image/webp'
+      }[ext] || 'application/octet-stream';
+      
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+      
+      // Stream the file
+      const fileStream = fs.createReadStream(filePath);
+      fileStream.pipe(res);
+    } catch (error) {
+      console.error("Error serving photo:", error);
+      res.status(500).json({ message: "Failed to serve photo" });
+    }
+  });
+
   // Get specific credit purchase status for tracking
   app.get('/api/credit-purchase/:id/status', isAuthenticated, async (req: any, res) => {
     try {

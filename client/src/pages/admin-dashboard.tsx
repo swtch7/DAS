@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { formatDistanceToNow } from "date-fns";
-import { Users, Clock, TrendingUp, DollarSign, CreditCard, CheckCircle, Copy, LogOut, Upload } from "lucide-react";
+import { Users, Clock, TrendingUp, DollarSign, CreditCard, CheckCircle, Copy, LogOut, Upload, Eye } from "lucide-react";
 
 interface CreditPurchaseRequest {
   id: number;
@@ -17,6 +17,7 @@ interface CreditPurchaseRequest {
   usdAmount: string;
   status: string;
   adminUrl?: string;
+  photoPath?: string;
   createdAt: string;
   user?: {
     id: string;
@@ -207,6 +208,11 @@ export default function AdminDashboard() {
         event.target.value = '';
       }
     });
+  };
+
+  const handleViewPhoto = (photoPath: string) => {
+    // Open photo in new window/tab
+    window.open(`/api/admin/photos/${photoPath}`, '_blank');
   };
 
   // Sort and color code requests
@@ -597,19 +603,32 @@ export default function AdminDashboard() {
                               </p>
                             </div>
                           </div>
-                          {request.adminUrl && (
+                          {(request.adminUrl || request.photoPath) && (
                             <div className="flex gap-2">
-                              <Input
-                                value={request.adminUrl}
-                                readOnly
-                                className="bg-zinc-600 border-zinc-500 text-white flex-1 h-8 text-sm"
-                              />
-                              <Button
-                                onClick={() => handleCopyUrl(request.adminUrl!)}
-                                className="bg-zinc-600 hover:bg-zinc-500 h-8 px-3 text-xs"
-                              >
-                                <Copy className="h-3 w-3" />
-                              </Button>
+                              {request.adminUrl && (
+                                <>
+                                  <Input
+                                    value={request.adminUrl}
+                                    readOnly
+                                    className="bg-zinc-600 border-zinc-500 text-white flex-1 h-8 text-sm"
+                                  />
+                                  <Button
+                                    onClick={() => handleCopyUrl(request.adminUrl!)}
+                                    className="bg-zinc-600 hover:bg-zinc-500 h-8 px-3 text-xs"
+                                  >
+                                    <Copy className="h-3 w-3" />
+                                  </Button>
+                                </>
+                              )}
+                              {request.photoPath && (
+                                <Button
+                                  onClick={() => handleViewPhoto(request.photoPath!)}
+                                  className="bg-indigo-600 hover:bg-indigo-700 h-8 px-3 text-xs flex items-center gap-1"
+                                >
+                                  <Eye className="h-3 w-3" />
+                                  View Photo
+                                </Button>
+                              )}
                             </div>
                           )}
                         </div>
