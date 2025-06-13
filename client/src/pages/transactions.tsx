@@ -16,14 +16,28 @@ import {
   TrendingUp
 } from "lucide-react";
 
+interface Transaction {
+  id: number;
+  userId: string;
+  type: string;
+  amount: number;
+  usdValue: string;
+  description: string;
+  status: string;
+  createdAt: string;
+}
+
 export default function Transactions() {
   const { user } = useAuth();
 
   // Fetch user transactions
-  const { data: transactions = [], isLoading } = useQuery({
+  const { data: transactionsData, isLoading } = useQuery({
     queryKey: ["/api/transactions"],
     enabled: !!user,
   });
+
+  // Ensure transactions is always an array
+  const transactions: Transaction[] = Array.isArray(transactionsData) ? transactionsData : [];
 
   const getTransactionIcon = (type: string) => {
     switch (type) {
@@ -54,6 +68,10 @@ export default function Transactions() {
         return <Badge variant="secondary">{status}</Badge>;
     }
   };
+
+  const creditPurchases = transactions.filter(t => t.type === 'purchase').length;
+  const redemptions = transactions.filter(t => t.type === 'redemption').length;
+  const totalUsdValue = transactions.reduce((sum, t) => sum + parseFloat(t.usdValue || '0'), 0);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900">
@@ -127,7 +145,7 @@ export default function Transactions() {
                   </div>
                   <div>
                     <p className="text-2xl font-bold text-white">
-                      {transactions.filter((t: any) => t.type === 'purchase').length}
+                      {creditPurchases}
                     </p>
                     <p className="text-sm text-gray-400">Credit Purchases</p>
                   </div>
@@ -143,7 +161,7 @@ export default function Transactions() {
                   </div>
                   <div>
                     <p className="text-2xl font-bold text-white">
-                      {transactions.filter((t: any) => t.type === 'redemption').length}
+                      {redemptions}
                     </p>
                     <p className="text-sm text-gray-400">Redemptions</p>
                   </div>
@@ -159,7 +177,7 @@ export default function Transactions() {
                   </div>
                   <div>
                     <p className="text-2xl font-bold text-white">
-                      ${transactions.reduce((sum: number, t: any) => sum + parseFloat(t.usdValue || 0), 0).toFixed(2)}
+                      ${totalUsdValue.toFixed(2)}
                     </p>
                     <p className="text-sm text-gray-400">Total USD Value</p>
                   </div>
@@ -198,7 +216,7 @@ export default function Transactions() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {(transactions as any[]).map((transaction: any) => (
+                  {transactions.map((transaction) => (
                     <div
                       key={transaction.id}
                       className="flex items-center justify-between p-4 bg-zinc-700/30 rounded-lg border border-zinc-600/30 hover:border-zinc-500/50 transition-colors"
