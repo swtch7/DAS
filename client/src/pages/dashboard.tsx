@@ -379,6 +379,11 @@ export default function Dashboard() {
         onClose={() => setShowRedeemModal(false)}
         userCredits={credits}
       />
+      <PhoneNumberModal
+        isOpen={showPhoneModal}
+        onClose={() => setShowPhoneModal(false)}
+        onPhoneUpdated={handlePhoneUpdated}
+      />
 
       {/* Purchase Tracker Sidebar */}
       {showTracker && latestPurchase && (
