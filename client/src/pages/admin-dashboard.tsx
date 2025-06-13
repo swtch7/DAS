@@ -417,64 +417,59 @@ export default function AdminDashboard() {
                           </div>
                         </div>
 
-                        <div className="space-y-2">
-                          <div className="flex gap-2">
-                            <Input
-                              placeholder="Enter admin URL"
-                              value={urlInputs[`purchase-${request.id}`] || request.adminUrl || ''}
-                              onChange={(e) => handleUrlInputChange(`purchase-${request.id}`, e.target.value)}
-                              className="bg-zinc-600 border-zinc-500 text-white flex-1 h-8 text-sm"
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="Enter admin URL"
+                            value={urlInputs[`purchase-${request.id}`] || request.adminUrl || ''}
+                            onChange={(e) => handleUrlInputChange(`purchase-${request.id}`, e.target.value)}
+                            className="bg-zinc-600 border-zinc-500 text-white flex-1 h-8 text-sm"
+                          />
+                          <Button
+                            onClick={() => handleUpdateUrl(request.id, 'purchase')}
+                            disabled={updateUrlMutation.isPending}
+                            className="bg-blue-600 hover:bg-blue-700 h-8 px-3 text-xs"
+                          >
+                            Update
+                          </Button>
+                          <label>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handlePhotoUpload(request.id, e)}
+                              className="hidden"
+                              disabled={uploadingPhotos.includes(request.id)}
                             />
                             <Button
-                              onClick={() => handleUpdateUrl(request.id, 'purchase')}
-                              disabled={updateUrlMutation.isPending}
-                              className="bg-blue-600 hover:bg-blue-700 h-8 px-3 text-xs"
+                              type="button"
+                              disabled={uploadingPhotos.includes(request.id)}
+                              className="bg-purple-600 hover:bg-purple-700 h-8 px-2 text-xs flex items-center gap-1"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                (e.currentTarget.parentElement?.querySelector('input[type="file"]') as HTMLInputElement)?.click();
+                              }}
                             >
-                              Update
+                              <Upload className="h-3 w-3" />
+                              {uploadingPhotos.includes(request.id) ? 'Uploading...' : 'Photo'}
                             </Button>
-                            {request.adminUrl && (
-                              <Button
-                                onClick={() => handleCopyUrl(request.adminUrl!)}
-                                className="bg-zinc-600 hover:bg-zinc-500 h-8 px-3 text-xs"
-                              >
-                                <Copy className="h-3 w-3" />
-                              </Button>
-                            )}
-                            {request.adminUrl && request.status !== 'completed' && (
-                              <Button
-                                onClick={() => handleConfirmPayment(request.id)}
-                                disabled={confirmPaymentMutation.isPending}
-                                className="bg-green-600 hover:bg-green-700 h-8 px-3 text-xs flex items-center gap-1"
-                              >
-                                <CheckCircle className="h-3 w-3" />
-                                Confirm
-                              </Button>
-                            )}
-                          </div>
-                          
-                          <div className="flex gap-2">
-                            <label className="flex-1">
-                              <input
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) => handlePhotoUpload(request.id, e)}
-                                className="hidden"
-                                disabled={uploadingPhotos.includes(request.id)}
-                              />
-                              <Button
-                                type="button"
-                                disabled={uploadingPhotos.includes(request.id)}
-                                className="bg-purple-600 hover:bg-purple-700 h-8 px-3 text-xs flex items-center gap-1 w-full"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  (e.currentTarget.parentElement?.querySelector('input[type="file"]') as HTMLInputElement)?.click();
-                                }}
-                              >
-                                <Upload className="h-3 w-3" />
-                                {uploadingPhotos.includes(request.id) ? 'Uploading...' : 'Upload Photo'}
-                              </Button>
-                            </label>
-                          </div>
+                          </label>
+                          {request.adminUrl && (
+                            <Button
+                              onClick={() => handleCopyUrl(request.adminUrl!)}
+                              className="bg-zinc-600 hover:bg-zinc-500 h-8 px-3 text-xs"
+                            >
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                          )}
+                          {request.adminUrl && request.status !== 'completed' && (
+                            <Button
+                              onClick={() => handleConfirmPayment(request.id)}
+                              disabled={confirmPaymentMutation.isPending}
+                              className="bg-green-600 hover:bg-green-700 h-8 px-3 text-xs flex items-center gap-1"
+                            >
+                              <CheckCircle className="h-3 w-3" />
+                              Confirm
+                            </Button>
+                          )}
                         </div>
                       </div>
                     ))}
