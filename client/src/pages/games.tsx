@@ -88,12 +88,13 @@ export default function Games() {
                 </a>
               </Link>
               
-              <Link href="/api/logout">
-                <a className="flex items-center space-x-3 px-4 py-3 text-gray-300 rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors">
-                  <LogOut className="h-5 w-5" />
-                  <span>Logout</span>
-                </a>
-              </Link>
+              <button
+                onClick={() => window.location.href = "/api/logout"}
+                className="w-full flex items-center space-x-3 px-4 py-3 text-gray-300 rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors text-left"
+              >
+                <LogOut className="h-5 w-5" />
+                <span>Logout</span>
+              </button>
             </nav>
           </div>
         </aside>
