@@ -13,6 +13,9 @@ import { nanoid } from "nanoid";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import nodemailer from "nodemailer";
+import multer from "multer";
+import fs from "fs";
+import path from "path";
 
 // Google Sheets setup
 const sheets = google.sheets('v4');
@@ -32,6 +35,21 @@ const emailTransporter = nodemailer.createTransport({
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
+  }
+});
+
+// Multer setup for file uploads
+const upload = multer({
+  dest: 'uploads/',
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'), false);
+    }
   }
 });
 

@@ -459,11 +459,11 @@ export default function AdminDashboard() {
                                 accept="image/*"
                                 onChange={(e) => handlePhotoUpload(request.id, e)}
                                 className="hidden"
-                                disabled={uploadingPhotos.has(request.id)}
+                                disabled={uploadingPhotos.includes(request.id)}
                               />
                               <Button
                                 type="button"
-                                disabled={uploadingPhotos.has(request.id)}
+                                disabled={uploadingPhotos.includes(request.id)}
                                 className="bg-purple-600 hover:bg-purple-700 h-8 px-3 text-xs flex items-center gap-1 w-full"
                                 onClick={(e) => {
                                   e.preventDefault();
@@ -471,7 +471,7 @@ export default function AdminDashboard() {
                                 }}
                               >
                                 <Upload className="h-3 w-3" />
-                                {uploadingPhotos.has(request.id) ? 'Uploading...' : 'Upload Photo'}
+                                {uploadingPhotos.includes(request.id) ? 'Uploading...' : 'Upload Photo'}
                               </Button>
                             </label>
                           </div>
