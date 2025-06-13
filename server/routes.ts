@@ -337,7 +337,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update user profile
-  app.patch('/api/user/profile', isAuthenticated, async (req: any, res) => {
+  app.patch('/api/profile', isAuthenticated, async (req: any, res) => {
     try {
       let userId: string;
       
@@ -348,18 +348,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId = req.user.id;
       }
       
+      console.log('Profile update request:', { userId, body: req.body });
+      
       const { phone, location } = req.body;
       
       const user = await storage.getUser(userId);
       if (!user) {
+        console.log('User not found:', userId);
         return res.status(404).json({ message: "User not found" });
       }
+      
+      console.log('Current user data:', user);
+      console.log('Updating with phone:', phone, 'location:', location);
       
       const updatedUser = await storage.upsertUser({
         ...user,
         phone,
         location,
+        updatedAt: new Date(),
       });
+      
+      console.log('Updated user result:', updatedUser);
       
       res.json(updatedUser);
     } catch (error) {
