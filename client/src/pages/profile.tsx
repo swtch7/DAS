@@ -1,6 +1,8 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import type { User } from "@shared/schema";
+import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +15,7 @@ import { z } from "zod";
 import { 
   Gamepad2, 
   Home, 
-  User, 
+  User as UserIcon, 
   History, 
   LogOut,
   Phone,
@@ -34,7 +36,7 @@ export default function Profile() {
   const { toast } = useToast();
 
   // Fetch user data
-  const { data: userData, isLoading: userLoading } = useQuery({
+  const { data: userData, isLoading: userLoading } = useQuery<User>({
     queryKey: ["/api/auth/user"],
   });
 
@@ -45,6 +47,16 @@ export default function Profile() {
       location: userData?.location || "",
     },
   });
+
+  // Update form values when user data changes
+  useEffect(() => {
+    if (userData) {
+      form.reset({
+        phone: userData.phone || "",
+        location: userData.location || "",
+      });
+    }
+  }, [userData, form]);
 
   // Update profile mutation
   const updateProfileMutation = useMutation({
@@ -102,7 +114,7 @@ export default function Profile() {
               
               <Link href="/profile">
                 <a className="flex items-center space-x-3 px-4 py-3 text-gray-300 rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors bg-zinc-700/30 text-white">
-                  <User className="h-5 w-5" />
+                  <UserIcon className="h-5 w-5" />
                   <span>Profile</span>
                 </a>
               </Link>
