@@ -170,10 +170,12 @@ export default function Dashboard() {
                   <span>Games</span>
                 </a>
               </Link>
-              <button className="w-full flex items-center space-x-3 px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors">
-                <History className="h-5 w-5" />
-                <span>Transaction History</span>
-              </button>
+              <Link href="/transactions">
+                <a className="flex items-center space-x-3 px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors">
+                  <History className="h-5 w-5" />
+                  <span>Transaction History</span>
+                </a>
+              </Link>
             </nav>
             
             <div className="mt-8 pt-6 border-t border-gray-700">
