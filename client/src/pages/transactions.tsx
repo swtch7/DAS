@@ -20,7 +20,7 @@ export default function Transactions() {
   const { user } = useAuth();
 
   // Fetch user transactions
-  const { data: transactions, isLoading } = useQuery({
+  const { data: transactions = [], isLoading } = useQuery({
     queryKey: ["/api/transactions"],
     enabled: !!user,
   });
@@ -127,7 +127,7 @@ export default function Transactions() {
                   </div>
                   <div>
                     <p className="text-2xl font-bold text-white">
-                      {transactions?.filter((t: any) => t.type === 'purchase').length || 0}
+                      {transactions.filter((t: any) => t.type === 'purchase').length}
                     </p>
                     <p className="text-sm text-gray-400">Credit Purchases</p>
                   </div>
@@ -143,7 +143,7 @@ export default function Transactions() {
                   </div>
                   <div>
                     <p className="text-2xl font-bold text-white">
-                      {transactions?.filter((t: any) => t.type === 'redemption').length || 0}
+                      {transactions.filter((t: any) => t.type === 'redemption').length}
                     </p>
                     <p className="text-sm text-gray-400">Redemptions</p>
                   </div>
@@ -159,7 +159,7 @@ export default function Transactions() {
                   </div>
                   <div>
                     <p className="text-2xl font-bold text-white">
-                      ${transactions?.reduce((sum: number, t: any) => sum + parseFloat(t.usdValue || 0), 0).toFixed(2) || '0.00'}
+                      ${transactions.reduce((sum: number, t: any) => sum + parseFloat(t.usdValue || 0), 0).toFixed(2)}
                     </p>
                     <p className="text-sm text-gray-400">Total USD Value</p>
                   </div>
@@ -182,7 +182,7 @@ export default function Transactions() {
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400 mx-auto"></div>
                   <p className="text-gray-400 mt-4">Loading transactions...</p>
                 </div>
-              ) : !transactions || transactions.length === 0 ? (
+              ) : transactions.length === 0 ? (
                 <div className="text-center py-12">
                   <History className="h-12 w-12 text-gray-500 mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-white mb-2">No Transactions Yet</h3>
@@ -198,7 +198,7 @@ export default function Transactions() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {transactions.map((transaction: any) => (
+                  {(transactions as any[]).map((transaction: any) => (
                     <div
                       key={transaction.id}
                       className="flex items-center justify-between p-4 bg-zinc-700/30 rounded-lg border border-zinc-600/30 hover:border-zinc-500/50 transition-colors"
