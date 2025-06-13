@@ -1,6 +1,7 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import type { User, Transaction } from "@shared/schema";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -10,7 +11,7 @@ import {
   Gamepad2, 
   Bell, 
   Home, 
-  User, 
+  User as UserIcon, 
   History, 
   ExternalLink, 
   LogOut,
@@ -68,12 +69,12 @@ export default function Dashboard() {
   }, [user?.id]);
 
   // Fetch user data
-  const { data: userData, isLoading: userLoading } = useQuery({
+  const { data: userData, isLoading: userLoading } = useQuery<User>({
     queryKey: ["/api/auth/user"],
   });
 
   // Fetch transactions
-  const { data: transactions = [], isLoading: transactionsLoading } = useQuery({
+  const { data: transactions = [], isLoading: transactionsLoading } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions"],
   });
 
@@ -175,7 +176,7 @@ export default function Dashboard() {
               
               <Link href="/profile">
                 <a className="flex items-center space-x-3 px-4 py-3 text-gray-300 rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors">
-                  <User className="h-5 w-5" />
+                  <UserIcon className="h-5 w-5" />
                   <span>Profile</span>
                 </a>
               </Link>
