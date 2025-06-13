@@ -15,7 +15,7 @@ import {
   LogOut 
 } from "lucide-react";
 // Using data URL for Golden Dragon image
-const goldenDragonImage = "/attached_assets/Screenshot%202025-06-12%20at%201.53.09%20PM_1749751068317.png";
+const goldenDragonImage = "/attached_assets/golden%20dragon_1749824618883.png";
 
 export default function Games() {
   const { user } = useAuth();

@@ -119,80 +119,59 @@ export default function Dashboard() {
   const usdValue = credits * 0.01;
 
   return (
-    <div className="min-h-screen bg-dark-bg text-gray-100">
-      {/* Navigation Header */}
-      <nav className="bg-surface border-b border-gray-700 px-4 py-3 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-              <Gamepad2 className="text-white text-lg" />
-            </div>
-            <h1 className="text-xl font-bold text-white">DAS Gaming Wallet</h1>
-          </div>
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm" className="text-gray-300 hover:text-white">
-              <Bell className="h-5 w-5" />
-            </Button>
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-sm font-medium text-white">
-                  {userData?.firstName?.charAt(0) || "U"}
-                </span>
-              </div>
-              <span className="text-sm text-gray-300">
-                {userData?.firstName || "User"}
-              </span>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      <div className="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <div className="min-h-screen bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900">
+      <div className="flex">
         {/* Sidebar */}
-        <aside className="lg:col-span-1">
-          <div className="bg-surface rounded-xl p-6 border border-gray-700">
+        <aside className="w-64 bg-zinc-800/50 backdrop-blur-sm border-r border-zinc-700 min-h-screen">
+          <div className="p-6">
+            <div className="flex items-center space-x-3 mb-8">
+              <div className="w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
+                <Gamepad2 className="h-5 w-5 text-black" />
+              </div>
+              <span className="text-xl font-bold text-white">Gaming Wallet</span>
+            </div>
+            
             <nav className="space-y-2">
               <Link href="/">
-                <a className="flex items-center space-x-3 px-3 py-2 bg-primary/20 text-primary rounded-lg font-medium">
+                <a className="flex items-center space-x-3 px-4 py-3 text-gray-300 rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors bg-zinc-700/30 text-white">
                   <Home className="h-5 w-5" />
                   <span>Dashboard</span>
                 </a>
               </Link>
+              
               <Link href="/profile">
-                <a className="flex items-center space-x-3 px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors">
+                <a className="flex items-center space-x-3 px-4 py-3 text-gray-300 rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors">
                   <User className="h-5 w-5" />
                   <span>Profile</span>
                 </a>
               </Link>
+              
               <Link href="/games">
-                <a className="flex items-center space-x-3 px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors">
+                <a className="flex items-center space-x-3 px-4 py-3 text-gray-300 rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors">
                   <Gamepad2 className="h-5 w-5" />
                   <span>Games</span>
                 </a>
               </Link>
+              
               <Link href="/transactions">
-                <a className="flex items-center space-x-3 px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors">
+                <a className="flex items-center space-x-3 px-4 py-3 text-gray-300 rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors">
                   <History className="h-5 w-5" />
                   <span>Transaction History</span>
                 </a>
               </Link>
+              
+              <Link href="/api/logout">
+                <a className="flex items-center space-x-3 px-4 py-3 text-gray-300 rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors">
+                  <LogOut className="h-5 w-5" />
+                  <span>Logout</span>
+                </a>
+              </Link>
             </nav>
-            
-            <div className="mt-8 pt-6 border-t border-gray-700">
-              <Button
-                onClick={handleLogout}
-                variant="destructive"
-                className="w-full"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-            </div>
           </div>
         </aside>
 
-        {/* Main Dashboard */}
-        <main className="lg:col-span-3 space-y-6">
+        {/* Main Content */}
+        <main className="flex-1 p-8">
           {/* Welcome Section */}
           <div className="bg-gradient-to-r from-primary to-purple-600 rounded-xl p-6 text-white">
             <h2 className="text-2xl font-bold mb-2">

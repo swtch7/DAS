@@ -12,13 +12,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { 
   Gamepad2, 
-  Bell, 
   Home, 
   User, 
   History, 
-  ExternalLink, 
   LogOut,
-  ArrowLeft,
   Phone,
   MapPin,
   Mail,
@@ -52,27 +49,26 @@ export default function Profile() {
   // Update profile mutation
   const updateProfileMutation = useMutation({
     mutationFn: async (data: ProfileFormData) => {
-      await apiRequest("PATCH", "/api/user/profile", data);
+      return await apiRequest("/api/profile", {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       toast({
-        title: "Profile updated!",
-        description: "Your profile information has been saved.",
+        title: "Profile updated",
+        description: "Your profile has been successfully updated.",
       });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
-        title: "Update failed",
+        title: "Error",
         description: error.message,
         variant: "destructive",
       });
     },
   });
-
-  const handleLogout = () => {
-    window.location.href = "/api/logout";
-  };
 
   const onSubmit = (data: ProfileFormData) => {
     updateProfileMutation.mutate(data);
@@ -80,96 +76,76 @@ export default function Profile() {
 
   if (userLoading) {
     return (
-      <div className="min-h-screen bg-dark-bg flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="min-h-screen bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-dark-bg text-gray-100">
-      {/* Navigation Header */}
-      <nav className="bg-surface border-b border-gray-700 px-4 py-3 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-              <Gamepad2 className="text-white text-lg" />
-            </div>
-            <h1 className="text-xl font-bold text-white">DAS Gaming Wallet</h1>
-          </div>
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm" className="text-gray-300 hover:text-white">
-              <Bell className="h-5 w-5" />
-            </Button>
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-sm font-medium text-white">
-                  {userData?.firstName?.charAt(0) || "U"}
-                </span>
-              </div>
-              <span className="text-sm text-gray-300">
-                {userData?.firstName || "User"}
-              </span>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      <div className="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <div className="min-h-screen bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900">
+      <div className="flex">
         {/* Sidebar */}
-        <aside className="lg:col-span-1">
-          <div className="bg-surface rounded-xl p-6 border border-gray-700">
+        <aside className="w-64 bg-zinc-800/50 backdrop-blur-sm border-r border-zinc-700 min-h-screen">
+          <div className="p-6">
+            <div className="flex items-center space-x-3 mb-8">
+              <div className="w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
+                <Gamepad2 className="h-5 w-5 text-black" />
+              </div>
+              <span className="text-xl font-bold text-white">Gaming Wallet</span>
+            </div>
+            
             <nav className="space-y-2">
               <Link href="/">
-                <a className="flex items-center space-x-3 px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors">
+                <a className="flex items-center space-x-3 px-4 py-3 text-gray-300 rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors">
                   <Home className="h-5 w-5" />
                   <span>Dashboard</span>
                 </a>
               </Link>
+              
               <Link href="/profile">
-                <a className="flex items-center space-x-3 px-3 py-2 bg-primary/20 text-primary rounded-lg font-medium">
+                <a className="flex items-center space-x-3 px-4 py-3 text-gray-300 rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors bg-zinc-700/30 text-white">
                   <User className="h-5 w-5" />
                   <span>Profile</span>
                 </a>
               </Link>
-              <button className="w-full flex items-center space-x-3 px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors">
-                <History className="h-5 w-5" />
-                <span>Transaction History</span>
-              </button>
-              <button className="w-full flex items-center space-x-3 px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors">
-                <ExternalLink className="h-5 w-5" />
-                <span>Game Site</span>
-              </button>
+              
+              <Link href="/games">
+                <a className="flex items-center space-x-3 px-4 py-3 text-gray-300 rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors">
+                  <Gamepad2 className="h-5 w-5" />
+                  <span>Games</span>
+                </a>
+              </Link>
+              
+              <Link href="/transactions">
+                <a className="flex items-center space-x-3 px-4 py-3 text-gray-300 rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors">
+                  <History className="h-5 w-5" />
+                  <span>Transaction History</span>
+                </a>
+              </Link>
+              
+              <Link href="/api/logout">
+                <a className="flex items-center space-x-3 px-4 py-3 text-gray-300 rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors">
+                  <LogOut className="h-5 w-5" />
+                  <span>Logout</span>
+                </a>
+              </Link>
             </nav>
-            
-            <div className="mt-8 pt-6 border-t border-gray-700">
-              <Button
-                onClick={handleLogout}
-                variant="destructive"
-                className="w-full"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-            </div>
           </div>
         </aside>
 
         {/* Main Content */}
-        <main className="lg:col-span-3 space-y-6">
+        <main className="flex-1 p-8">
           {/* Header */}
-          <div className="flex items-center space-x-4">
-            <Link href="/">
-              <Button variant="ghost" className="text-gray-300 hover:text-white">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
-              </Button>
-            </Link>
-            <h2 className="text-2xl font-bold text-white">Profile Settings</h2>
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold text-white mb-4">Profile Settings</h1>
+            <p className="text-gray-400 text-lg">
+              Manage your account information and preferences
+            </p>
           </div>
 
           {/* Profile Information */}
-          <Card className="bg-surface border-gray-700">
+          <Card className="bg-zinc-800/50 border-zinc-700 mb-6">
             <CardHeader>
               <CardTitle className="text-white flex items-center space-x-2">
                 <UserCircle className="h-5 w-5" />
@@ -177,114 +153,107 @@ export default function Profile() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Read-only fields */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label className="text-gray-300 flex items-center space-x-2">
+                    <Mail className="h-4 w-4" />
+                    <span>Email</span>
+                  </Label>
+                  <Input
+                    value={userData?.email || ""}
+                    disabled
+                    className="bg-zinc-700 border-zinc-600 text-gray-300"
+                  />
+                </div>
+                
                 <div className="space-y-2">
                   <Label className="text-gray-300">First Name</Label>
                   <Input
                     value={userData?.firstName || ""}
                     disabled
-                    className="bg-gray-700 border-gray-600 text-gray-400"
+                    className="bg-zinc-700 border-zinc-600 text-gray-300"
                   />
                 </div>
+                
                 <div className="space-y-2">
                   <Label className="text-gray-300">Last Name</Label>
                   <Input
                     value={userData?.lastName || ""}
                     disabled
-                    className="bg-gray-700 border-gray-600 text-gray-400"
+                    className="bg-zinc-700 border-zinc-600 text-gray-300"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="text-gray-300">Credits</Label>
+                  <Input
+                    value={userData?.credits?.toLocaleString() || "0"}
+                    disabled
+                    className="bg-zinc-700 border-zinc-600 text-gray-300"
                   />
                 </div>
               </div>
-
-              <div className="space-y-2">
-                <Label className="text-gray-300 flex items-center space-x-2">
-                  <Mail className="h-4 w-4" />
-                  <span>Email Address</span>
-                </Label>
-                <Input
-                  value={userData?.email || ""}
-                  disabled
-                  className="bg-gray-700 border-gray-600 text-gray-400"
-                />
-              </div>
-
-              {/* Editable fields */}
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-gray-300 flex items-center space-x-2">
-                    <Phone className="h-4 w-4" />
-                    <span>Phone Number</span>
-                  </Label>
-                  <Input
-                    id="phone"
-                    {...form.register("phone")}
-                    placeholder="+1 (555) 123-4567"
-                    className="bg-gray-700 border-gray-600 text-white focus:ring-2 focus:ring-primary focus:border-transparent"
-                  />
-                  {form.formState.errors.phone && (
-                    <p className="text-red-400 text-sm">{form.formState.errors.phone.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="location" className="text-gray-300 flex items-center space-x-2">
-                    <MapPin className="h-4 w-4" />
-                    <span>Location</span>
-                  </Label>
-                  <Input
-                    id="location"
-                    {...form.register("location")}
-                    placeholder="City, State"
-                    className="bg-gray-700 border-gray-600 text-white focus:ring-2 focus:ring-primary focus:border-transparent"
-                  />
-                  {form.formState.errors.location && (
-                    <p className="text-red-400 text-sm">{form.formState.errors.location.message}</p>
-                  )}
-                </div>
-
-                <Button
-                  type="submit"
-                  disabled={updateProfileMutation.isPending}
-                  className="bg-primary hover:bg-primary/80 text-white"
-                >
-                  {updateProfileMutation.isPending ? "Updating..." : "Update Profile"}
-                </Button>
-              </form>
             </CardContent>
           </Card>
 
-          {/* Game Credentials */}
-          <Card className="bg-surface border-gray-700">
+          {/* Editable Profile Fields */}
+          <Card className="bg-zinc-800/50 border-zinc-700">
             <CardHeader>
-              <CardTitle className="text-white flex items-center space-x-2">
-                <Gamepad2 className="h-5 w-5" />
-                <span>Game Credentials</span>
-              </CardTitle>
+              <CardTitle className="text-white">Contact Information</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-gray-300">Game Username</Label>
-                  <Input
-                    value={userData?.gameUsername || "Not generated"}
-                    disabled
-                    className="bg-gray-700 border-gray-600 text-gray-400"
-                  />
+            <CardContent>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="text-gray-300 flex items-center space-x-2">
+                      <Phone className="h-4 w-4" />
+                      <span>Phone Number</span>
+                    </Label>
+                    <Input
+                      {...form.register("phone")}
+                      placeholder="Enter your phone number"
+                      className="bg-zinc-700 border-zinc-600 text-white placeholder-gray-400"
+                    />
+                    {form.formState.errors.phone && (
+                      <p className="text-red-400 text-sm">
+                        {form.formState.errors.phone.message}
+                      </p>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-gray-300 flex items-center space-x-2">
+                      <MapPin className="h-4 w-4" />
+                      <span>Location</span>
+                    </Label>
+                    <Input
+                      {...form.register("location")}
+                      placeholder="Enter your location"
+                      className="bg-zinc-700 border-zinc-600 text-white placeholder-gray-400"
+                    />
+                    {form.formState.errors.location && (
+                      <p className="text-red-400 text-sm">
+                        {form.formState.errors.location.message}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-gray-300">Game Password</Label>
-                  <Input
-                    type="password"
-                    value={userData?.gamePassword || "Not generated"}
-                    disabled
-                    className="bg-gray-700 border-gray-600 text-gray-400"
-                  />
+                
+                <div className="flex justify-end space-x-4">
+                  <Link href="/">
+                    <Button variant="outline" className="border-zinc-600 text-gray-300 hover:text-white">
+                      Cancel
+                    </Button>
+                  </Link>
+                  <Button
+                    type="submit"
+                    disabled={updateProfileMutation.isPending}
+                    className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-medium hover:from-yellow-500 hover:to-orange-600"
+                  >
+                    {updateProfileMutation.isPending ? "Updating..." : "Update Profile"}
+                  </Button>
                 </div>
-              </div>
-              <p className="text-sm text-gray-400">
-                Game credentials are automatically generated when you first access the game site.
-              </p>
+              </form>
             </CardContent>
           </Card>
         </main>
