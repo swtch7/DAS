@@ -183,7 +183,7 @@ export default function Dashboard() {
           </div>
 
           {/* Credits Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <Card className="bg-surface border-gray-700">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
@@ -220,7 +220,7 @@ export default function Dashboard() {
           </div>
 
           {/* Quick Actions */}
-          <Card className="bg-surface border-gray-700">
+          <Card className="bg-surface border-gray-700 mb-8">
             <CardContent className="p-6">
               <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -244,11 +244,20 @@ export default function Dashboard() {
                 
                 <Button
                   onClick={handleGameSiteAccess}
-                  className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg p-4 h-auto flex-col space-y-2 transition-colors group"
+                  className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg p-4 h-auto flex-col space-y-2 transition-colors group relative overflow-hidden"
                 >
-                  <Gamepad2 className="h-6 w-6 group-hover:scale-110 transition-transform" />
-                  <div className="font-medium">Play Game</div>
-                  <div className="text-sm text-blue-100">Launch Golden Dragon City</div>
+                  <div className="absolute inset-0 opacity-20">
+                    <img 
+                      src="/attached_assets/golden%20dragon_1749824618883.png"
+                      alt="Golden Dragon"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="relative z-10 flex flex-col items-center space-y-2">
+                    <Gamepad2 className="h-6 w-6 group-hover:scale-110 transition-transform" />
+                    <div className="font-medium">Play Game</div>
+                    <div className="text-sm text-blue-100">Launch Golden Dragon City</div>
+                  </div>
                 </Button>
               </div>
             </CardContent>
