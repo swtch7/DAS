@@ -458,6 +458,15 @@ export default function AdminDashboard() {
                               {uploadingPhotos.includes(request.id) ? 'Uploading...' : 'Photo'}
                             </Button>
                           </label>
+                          {request.photoPath && (
+                            <Button
+                              onClick={() => handleViewPhoto(request.photoPath!)}
+                              className="bg-indigo-600 hover:bg-indigo-700 h-8 px-2 text-xs"
+                              title="View uploaded photo"
+                            >
+                              <Eye className="h-3 w-3" />
+                            </Button>
+                          )}
                           {request.adminUrl && (
                             <Button
                               onClick={() => handleCopyUrl(request.adminUrl!)}
@@ -623,10 +632,10 @@ export default function AdminDashboard() {
                               {request.photoPath && (
                                 <Button
                                   onClick={() => handleViewPhoto(request.photoPath!)}
-                                  className="bg-indigo-600 hover:bg-indigo-700 h-8 px-3 text-xs flex items-center gap-1"
+                                  className="bg-indigo-600 hover:bg-indigo-700 h-8 px-2 text-xs"
+                                  title="View uploaded photo"
                                 >
                                   <Eye className="h-3 w-3" />
-                                  View Photo
                                 </Button>
                               )}
                             </div>
