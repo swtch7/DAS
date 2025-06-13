@@ -78,6 +78,7 @@ export const creditPurchaseRequests = pgTable("credit_purchase_requests", {
   cashappLink: text("cashapp_link"),
   adminUrl: varchar("admin_url"),
   sheetRowId: varchar("sheet_row_id"),
+  photoPath: varchar("photo_path"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

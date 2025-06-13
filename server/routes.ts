@@ -48,7 +48,9 @@ const upload = multer({
     if (file.mimetype.startsWith('image/')) {
       cb(null, true);
     } else {
-      cb(new Error('Only image files are allowed'), false);
+      const error = new Error('Only image files are allowed') as any;
+      error.code = 'LIMIT_FILE_TYPE';
+      cb(error, false);
     }
   }
 });
@@ -1130,6 +1132,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error confirming payment:", error);
       res.status(500).json({ message: "Failed to confirm payment" });
+    }
+  });
+
+  // Upload photo for credit purchase request
+  app.post('/api/admin/credit-purchases/:id/upload-photo', isAdmin, upload.single('photo'), async (req, res) => {
+    try {
+      const requestId = parseInt(req.params.id);
+      
+      if (!req.file) {
+        return res.status(400).json({ message: "No photo file provided" });
+      }
+      
+      // Get the credit request to verify it exists
+      const creditRequest = await storage.getCreditRequestById(requestId);
+      if (!creditRequest) {
+        return res.status(404).json({ message: "Credit request not found" });
+      }
+      
+      // Create uploads directory if it doesn't exist
+      const uploadsDir = path.join(process.cwd(), 'uploads');
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+      
+      // Generate a unique filename
+      const fileExtension = path.extname(req.file.originalname);
+      const fileName = `credit-purchase-${requestId}-${Date.now()}${fileExtension}`;
+      const filePath = path.join(uploadsDir, fileName);
+      
+      // Move the uploaded file to the final location
+      fs.renameSync(req.file.path, filePath);
+      
+      // Update the credit request with photo path (you might want to add a photoPath field to your schema)
+      await storage.updateCreditPurchaseRequest(requestId, { 
+        photoPath: fileName 
+      });
+      
+      res.json({ 
+        success: true, 
+        message: "Photo uploaded successfully",
+        fileName: fileName 
+      });
+    } catch (error) {
+      console.error("Error uploading photo:", error);
+      
+      // Clean up uploaded file if there was an error
+      if (req.file && fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
+      
+      res.status(500).json({ message: "Failed to upload photo" });
     }
   });
 
