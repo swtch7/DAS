@@ -2,9 +2,20 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
-import { Play, Users, Trophy, Coins } from "lucide-react";
+import { Link } from "wouter";
+import { 
+  Play, 
+  Users, 
+  Trophy, 
+  Coins, 
+  Gamepad2, 
+  Home, 
+  User, 
+  History, 
+  LogOut 
+} from "lucide-react";
 // Using data URL for Golden Dragon image
-const goldenDragonImage = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDYwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxkZWZzPgo8bGluZWFyR3JhZGllbnQgaWQ9ImJnR3JhZGllbnQiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPgo8c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMzMzM2ZmO3N0b3Atb3BhY2l0eToxIiAvPgo8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiM2NjMzZmY7c3RvcC1vcGFjaXR5OjEiIC8+CjwvbGluZWFyR3JhZGllbnQ+CjxsaW5lYXJHcmFkaWVudCBpZD0iZHJhZ29uR3JhZGllbnQiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPgo8c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojZmZkNzAwO3N0b3Atb3BhY2l0eToxIiAvPgo8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiNmZjk5MDA7c3RvcC1vcGFjaXR5OjEiIC8+CjwvbGluZWFyR3JhZGllbnQ+CjwvZGVmcz4KPHJlY3Qgd2lkdGg9IjYwMCIgaGVpZ2h0PSIzMDAiIGZpbGw9InVybCgjYmdHcmFkaWVudCkiLz4KPHN2ZyB4PSIxMDAiIHk9IjUwIiB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDQwMCAyMDAiPgo8IS0tIERyYWdvbiBTaWxob3VldHRlIC0tPgo8cGF0aCBkPSJNNTAgMTAwIEM1MCA4MCA3MCA2MCA5MCA2MCBDMTA1IDYwIDEyMCA3MCAxMzAgODAgQzE0MCA5MCAxNTAgODUgMTYwIDkwIEMxNzAgMTAwIDE4MCA5MCAyMDAgMTAwIEMxOTAgMTIwIDE4MCAxMzAgMTcwIDE0MCBDMTU1IDE1MCAxNDAgMTQwIDEzMCAxMzAgQzEyMCAxNDAgMTA1IDE1MCA5MCAxNDAgQzcwIDEzMCA1MCAxMjAgNTAgMTAwWiIgZmlsbD0idXJsKCNkcmFnb25HcmFkaWVudCkiLz4KPC9zdmc+CjwhLS0gR2FtZSBUaXRsZSAtLT4KPHR4dCB4PSIzMDAiIHk9IjE4MCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjQ4IiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0iI2ZmZDcwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+R09MREVOID0+PC90eHQ+Cjx0eHQgeD0iMzAwIiB5PSIyMzAiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI0OCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IiNmZmQ3MDAiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkRSQUdPTjwvdHh0Pgo8L3N2Zz4=";
+const goldenDragonImage = "/attached_assets/Screenshot%202025-06-12%20at%201.53.09%20PM_1749751068317.png";
 
 export default function Games() {
   const { user } = useAuth();
@@ -36,19 +47,68 @@ export default function Games() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-4">Game Library</h1>
-          <p className="text-gray-400 text-lg">
-            Discover amazing games powered by your gaming credits
-          </p>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900">
+      <div className="flex">
+        {/* Sidebar */}
+        <aside className="w-64 bg-zinc-800/50 backdrop-blur-sm border-r border-zinc-700 min-h-screen">
+          <div className="p-6">
+            <div className="flex items-center space-x-3 mb-8">
+              <div className="w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
+                <Gamepad2 className="h-5 w-5 text-black" />
+              </div>
+              <span className="text-xl font-bold text-white">Gaming Wallet</span>
+            </div>
+            
+            <nav className="space-y-2">
+              <Link href="/">
+                <a className="flex items-center space-x-3 px-4 py-3 text-gray-300 rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors">
+                  <Home className="h-5 w-5" />
+                  <span>Dashboard</span>
+                </a>
+              </Link>
+              
+              <Link href="/profile">
+                <a className="flex items-center space-x-3 px-4 py-3 text-gray-300 rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors">
+                  <User className="h-5 w-5" />
+                  <span>Profile</span>
+                </a>
+              </Link>
+              
+              <Link href="/games">
+                <a className="flex items-center space-x-3 px-4 py-3 text-gray-300 rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors bg-zinc-700/30 text-white">
+                  <Gamepad2 className="h-5 w-5" />
+                  <span>Games</span>
+                </a>
+              </Link>
+              
+              <button className="w-full flex items-center space-x-3 px-4 py-3 text-gray-300 rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors">
+                <History className="h-5 w-5" />
+                <span>Transaction History</span>
+              </button>
+              
+              <Link href="/api/logout">
+                <a className="flex items-center space-x-3 px-4 py-3 text-gray-300 rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors">
+                  <LogOut className="h-5 w-5" />
+                  <span>Logout</span>
+                </a>
+              </Link>
+            </nav>
+          </div>
+        </aside>
 
-        {/* Stats Bar */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-zinc-800/50 border-zinc-700">
+        {/* Main Content */}
+        <main className="flex-1 p-8">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold text-white mb-4">Game Library</h1>
+            <p className="text-gray-400 text-lg">
+              Discover amazing games powered by your gaming credits
+            </p>
+          </div>
+
+          {/* Stats Bar */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <Card className="bg-zinc-800/50 border-zinc-700">
             <CardContent className="p-6">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
@@ -198,7 +258,8 @@ export default function Games() {
               </p>
             </CardContent>
           </Card>
-        </div>
+          </div>
+        </main>
       </div>
     </div>
   );
