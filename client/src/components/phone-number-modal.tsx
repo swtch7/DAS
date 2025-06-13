@@ -21,7 +21,7 @@ export default function PhoneNumberModal({ isOpen, onClose, onPhoneUpdated }: Ph
 
   const updatePhoneMutation = useMutation({
     mutationFn: async (phone: string) => {
-      return await apiRequest("/api/profile", "PATCH", { phone });
+      return await apiRequest("PATCH", "/api/profile", { phone });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
