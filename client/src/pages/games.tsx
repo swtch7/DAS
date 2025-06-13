@@ -81,10 +81,12 @@ export default function Games() {
                 </a>
               </Link>
               
-              <button className="w-full flex items-center space-x-3 px-4 py-3 text-gray-300 rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors">
-                <History className="h-5 w-5" />
-                <span>Transaction History</span>
-              </button>
+              <Link href="/transactions">
+                <a className="flex items-center space-x-3 px-4 py-3 text-gray-300 rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors">
+                  <History className="h-5 w-5" />
+                  <span>Transaction History</span>
+                </a>
+              </Link>
               
               <Link href="/api/logout">
                 <a className="flex items-center space-x-3 px-4 py-3 text-gray-300 rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors">

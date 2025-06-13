@@ -23,6 +23,7 @@ import {
 import CreditPurchaseModal from "@/components/credit-purchase-modal";
 import RedeemModal from "@/components/redeem-modal";
 import PurchaseTrackerSidebar from "@/components/purchase-tracker-sidebar";
+import PhoneNumberModal from "@/components/phone-number-modal";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -30,6 +31,8 @@ export default function Dashboard() {
   const [showBuyModal, setShowBuyModal] = useState(false);
   const [showRedeemModal, setShowRedeemModal] = useState(false);
   const [showTracker, setShowTracker] = useState(false);
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [pendingAction, setPendingAction] = useState<'buy' | 'redeem' | null>(null);
   const [latestPurchase, setLatestPurchase] = useState<{
     id: number;
     creditsRequested: number;
@@ -105,6 +108,37 @@ export default function Dashboard() {
     }
     // Open auto-login page that will submit credentials to game site
     window.open("/api/game-site-login", "_blank");
+  };
+
+  const checkPhoneNumber = (action: 'buy' | 'redeem') => {
+    if (!userData?.phone) {
+      setPendingAction(action);
+      setShowPhoneModal(true);
+      return false;
+    }
+    return true;
+  };
+
+  const handleBuyCredits = () => {
+    if (checkPhoneNumber('buy')) {
+      setShowBuyModal(true);
+    }
+  };
+
+  const handleRedeemCredits = () => {
+    if (checkPhoneNumber('redeem')) {
+      setShowRedeemModal(true);
+    }
+  };
+
+  const handlePhoneUpdated = () => {
+    // After phone is updated, proceed with the pending action
+    if (pendingAction === 'buy') {
+      setShowBuyModal(true);
+    } else if (pendingAction === 'redeem') {
+      setShowRedeemModal(true);
+    }
+    setPendingAction(null);
   };
 
   if (userLoading) {
@@ -225,7 +259,7 @@ export default function Dashboard() {
               <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <Button
-                  onClick={() => setShowBuyModal(true)}
+                  onClick={handleBuyCredits}
                   className="bg-primary hover:bg-primary/80 text-white rounded-lg p-4 h-auto flex-col space-y-2 transition-colors group"
                 >
                   <Plus className="h-6 w-6 group-hover:scale-110 transition-transform" />
@@ -234,7 +268,7 @@ export default function Dashboard() {
                 </Button>
                 
                 <Button
-                  onClick={() => setShowRedeemModal(true)}
+                  onClick={handleRedeemCredits}
                   className="bg-accent hover:bg-accent/80 text-white rounded-lg p-4 h-auto flex-col space-y-2 transition-colors group"
                 >
                   <ArrowRightLeft className="h-6 w-6 group-hover:scale-110 transition-transform" />
