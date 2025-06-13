@@ -130,7 +130,7 @@ async function sendSMS(to: string, message: string) {
     });
     console.log('SMS sent successfully to:', to);
   } catch (error) {
-    console.error('Failed to send SMS to', to, '- Error:', error.message);
+    console.error('Failed to send SMS to', to, '- Error:', error instanceof Error ? error.message : String(error));
     // For testing purposes, log the message that would have been sent
     console.log('🔗 PASSWORD RESET LINK (SMS failed):', message);
   }
@@ -466,8 +466,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Google Sheets test failed:", error);
       res.status(500).json({ 
-        error: error.message,
-        details: error.stack 
+        error: error instanceof Error ? error.message : String(error),
+        details: error instanceof Error ? error.stack : String(error)
       });
     }
   });
@@ -592,7 +592,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid credits amount" });
       }
       
-      if (user.credits < creditsToRedeem) {
+      if ((user.credits || 0) < creditsToRedeem) {
         return res.status(400).json({ message: "Insufficient credits" });
       }
 
@@ -608,7 +608,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const transaction = await storage.createTransaction(transactionData);
       
       // Update user credits
-      const newCredits = user.credits - creditsToRedeem;
+      const newCredits = (user.credits || 0) - creditsToRedeem;
       await storage.updateUserCredits(userId, newCredits);
       
       // Add to Google Sheets
