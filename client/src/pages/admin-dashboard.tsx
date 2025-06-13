@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { formatDistanceToNow } from "date-fns";
-import { Users, Clock, TrendingUp, DollarSign, CreditCard, CheckCircle, Copy, LogOut } from "lucide-react";
+import { Users, Clock, TrendingUp, DollarSign, CreditCard, CheckCircle, Copy, LogOut, Upload } from "lucide-react";
 
 interface CreditPurchaseRequest {
   id: number;
@@ -57,6 +57,7 @@ export default function AdminDashboard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [urlInputs, setUrlInputs] = useState<Record<string, string>>({});
+  const [uploadingPhotos, setUploadingPhotos] = useState<number[]>([]);
 
   // Fetch admin statistics
   const { data: adminStats, isLoading: loadingStats } = useQuery<AdminStats>({
@@ -119,6 +120,39 @@ export default function AdminDashboard() {
     },
   });
 
+  // Photo upload mutation
+  const uploadPhotoMutation = useMutation({
+    mutationFn: async ({ id, file }: { id: number; file: File }) => {
+      const formData = new FormData();
+      formData.append('photo', file);
+      
+      const response = await fetch(`/api/admin/credit-purchases/${id}/upload-photo`, {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to upload photo');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Photo Uploaded",
+        description: "Photo has been uploaded successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/credit-purchases"] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to upload photo",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleUpdateUrl = (id: number, type: 'purchase' | 'redemption') => {
     const key = `${type}-${id}`;
     const adminUrl = urlInputs[key];
@@ -139,6 +173,40 @@ export default function AdminDashboard() {
 
   const handleUrlInputChange = (key: string, value: string) => {
     setUrlInputs(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handlePhotoUpload = (id: number, event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Error",
+        description: "Please select an image file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "Error",
+        description: "File size must be less than 10MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploadingPhotos(prev => [...prev, id]);
+    uploadPhotoMutation.mutate({ id, file }, {
+      onSettled: () => {
+        setUploadingPhotos(prev => prev.filter(photoId => photoId !== id));
+        // Reset the file input
+        event.target.value = '';
+      }
+    });
   };
 
   // Sort and color code requests
@@ -349,38 +417,64 @@ export default function AdminDashboard() {
                           </div>
                         </div>
 
-                        <div className="flex gap-2">
-                          <Input
-                            placeholder="Enter admin URL"
-                            value={urlInputs[`purchase-${request.id}`] || request.adminUrl || ''}
-                            onChange={(e) => handleUrlInputChange(`purchase-${request.id}`, e.target.value)}
-                            className="bg-zinc-600 border-zinc-500 text-white flex-1 h-8 text-sm"
-                          />
-                          <Button
-                            onClick={() => handleUpdateUrl(request.id, 'purchase')}
-                            disabled={updateUrlMutation.isPending}
-                            className="bg-blue-600 hover:bg-blue-700 h-8 px-3 text-xs"
-                          >
-                            Update
-                          </Button>
-                          {request.adminUrl && (
+                        <div className="space-y-2">
+                          <div className="flex gap-2">
+                            <Input
+                              placeholder="Enter admin URL"
+                              value={urlInputs[`purchase-${request.id}`] || request.adminUrl || ''}
+                              onChange={(e) => handleUrlInputChange(`purchase-${request.id}`, e.target.value)}
+                              className="bg-zinc-600 border-zinc-500 text-white flex-1 h-8 text-sm"
+                            />
                             <Button
-                              onClick={() => handleCopyUrl(request.adminUrl!)}
-                              className="bg-zinc-600 hover:bg-zinc-500 h-8 px-3 text-xs"
+                              onClick={() => handleUpdateUrl(request.id, 'purchase')}
+                              disabled={updateUrlMutation.isPending}
+                              className="bg-blue-600 hover:bg-blue-700 h-8 px-3 text-xs"
                             >
-                              <Copy className="h-3 w-3" />
+                              Update
                             </Button>
-                          )}
-                          {request.adminUrl && request.status !== 'completed' && (
-                            <Button
-                              onClick={() => handleConfirmPayment(request.id)}
-                              disabled={confirmPaymentMutation.isPending}
-                              className="bg-green-600 hover:bg-green-700 h-8 px-3 text-xs flex items-center gap-1"
-                            >
-                              <CheckCircle className="h-3 w-3" />
-                              Confirm
-                            </Button>
-                          )}
+                            {request.adminUrl && (
+                              <Button
+                                onClick={() => handleCopyUrl(request.adminUrl!)}
+                                className="bg-zinc-600 hover:bg-zinc-500 h-8 px-3 text-xs"
+                              >
+                                <Copy className="h-3 w-3" />
+                              </Button>
+                            )}
+                            {request.adminUrl && request.status !== 'completed' && (
+                              <Button
+                                onClick={() => handleConfirmPayment(request.id)}
+                                disabled={confirmPaymentMutation.isPending}
+                                className="bg-green-600 hover:bg-green-700 h-8 px-3 text-xs flex items-center gap-1"
+                              >
+                                <CheckCircle className="h-3 w-3" />
+                                Confirm
+                              </Button>
+                            )}
+                          </div>
+                          
+                          <div className="flex gap-2">
+                            <label className="flex-1">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handlePhotoUpload(request.id, e)}
+                                className="hidden"
+                                disabled={uploadingPhotos.has(request.id)}
+                              />
+                              <Button
+                                type="button"
+                                disabled={uploadingPhotos.has(request.id)}
+                                className="bg-purple-600 hover:bg-purple-700 h-8 px-3 text-xs flex items-center gap-1 w-full"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  (e.currentTarget.parentElement?.querySelector('input[type="file"]') as HTMLInputElement)?.click();
+                                }}
+                              >
+                                <Upload className="h-3 w-3" />
+                                {uploadingPhotos.has(request.id) ? 'Uploading...' : 'Upload Photo'}
+                              </Button>
+                            </label>
+                          </div>
                         </div>
                       </div>
                     ))}
