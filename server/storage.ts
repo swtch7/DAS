@@ -307,7 +307,7 @@ export class DatabaseStorage implements IStorage {
           .where(eq(creditPurchaseRequests.userId, user.id));
 
         // Calculate USD balance from credits (conversion rate: $0.01 per credit)
-        const userCredits = user.credits || 0;
+        const userCredits = user.credits ?? 0;
         const usdBalance = (userCredits * 0.01).toFixed(2);
 
         // Get most played game based on activity
