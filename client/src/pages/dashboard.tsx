@@ -19,7 +19,9 @@ import {
   DollarSign,
   Plus,
   ArrowRightLeft,
-  TrendingUp
+  TrendingUp,
+  Menu,
+  X
 } from "lucide-react";
 import CreditPurchaseModal from "@/components/credit-purchase-modal";
 import RedeemModal from "@/components/redeem-modal";
@@ -34,6 +36,7 @@ export default function Dashboard() {
   const [showTracker, setShowTracker] = useState(false);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [pendingAction, setPendingAction] = useState<'buy' | 'redeem' | null>(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true); // Start collapsed on mobile
   const [latestPurchase, setLatestPurchase] = useState<{
     id: number;
     creditsRequested: number;
@@ -155,59 +158,99 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900">
+      {/* Mobile sidebar toggle */}
+      <button
+        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+        className="fixed top-4 left-4 z-50 lg:hidden bg-zinc-800 border border-zinc-700 text-white p-2 rounded-lg hover:bg-zinc-700 transition-colors"
+      >
+        <Menu className="h-5 w-5" />
+      </button>
+
+      {/* Desktop sidebar toggle */}
+      <button
+        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+        className="fixed top-4 left-4 z-50 hidden lg:block bg-zinc-800 border border-zinc-700 text-white p-2 rounded-lg hover:bg-zinc-700 transition-colors"
+      >
+        {sidebarCollapsed ? <Menu className="h-5 w-5" /> : <X className="h-5 w-5" />}
+      </button>
+
       <div className="flex">
         {/* Sidebar */}
-        <aside className="w-64 bg-zinc-800/50 backdrop-blur-sm border-r border-zinc-700 min-h-screen">
-          <div className="p-6">
-            <div className="flex items-center space-x-3 mb-8">
+        <aside className={`${
+          sidebarCollapsed ? '-translate-x-full lg:translate-x-0 lg:w-16' : 'translate-x-0 lg:w-64'
+        } fixed lg:relative top-0 left-0 h-full w-64 bg-zinc-800/50 backdrop-blur-sm border-r border-zinc-700 min-h-screen transition-all duration-300 z-40`}>
+          <div className={`p-6 ${sidebarCollapsed ? 'lg:p-3' : ''}`}>
+            <div className={`flex items-center mb-8 ${sidebarCollapsed ? 'lg:justify-center lg:space-x-0' : 'space-x-3'}`}>
               <div className="w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
                 <Gamepad2 className="h-5 w-5 text-black" />
               </div>
-              <span className="text-xl font-bold text-white">Gaming Wallet</span>
+              {!sidebarCollapsed && (
+                <span className="text-xl font-bold text-white lg:block">Gaming Wallet</span>
+              )}
             </div>
             
             <nav className="space-y-2">
               <Link href="/">
-                <a className="flex items-center space-x-3 px-4 py-3 text-gray-300 rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors bg-zinc-700/30 text-white">
+                <a className={`flex items-center rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors bg-zinc-700/30 text-white ${
+                  sidebarCollapsed ? 'lg:justify-center lg:px-2 lg:py-3 px-4 py-3' : 'space-x-3 px-4 py-3'
+                }`}>
                   <Home className="h-5 w-5" />
-                  <span>Dashboard</span>
+                  {!sidebarCollapsed && <span className="lg:block">Dashboard</span>}
                 </a>
               </Link>
               
               <Link href="/profile">
-                <a className="flex items-center space-x-3 px-4 py-3 text-gray-300 rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors">
+                <a className={`flex items-center text-gray-300 rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors ${
+                  sidebarCollapsed ? 'lg:justify-center lg:px-2 lg:py-3 px-4 py-3' : 'space-x-3 px-4 py-3'
+                }`}>
                   <UserIcon className="h-5 w-5" />
-                  <span>Profile</span>
+                  {!sidebarCollapsed && <span className="lg:block">Profile</span>}
                 </a>
               </Link>
               
               <Link href="/games">
-                <a className="flex items-center space-x-3 px-4 py-3 text-gray-300 rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors">
+                <a className={`flex items-center text-gray-300 rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors ${
+                  sidebarCollapsed ? 'lg:justify-center lg:px-2 lg:py-3 px-4 py-3' : 'space-x-3 px-4 py-3'
+                }`}>
                   <Gamepad2 className="h-5 w-5" />
-                  <span>Games</span>
+                  {!sidebarCollapsed && <span className="lg:block">Games</span>}
                 </a>
               </Link>
               
               <Link href="/transactions">
-                <a className="flex items-center space-x-3 px-4 py-3 text-gray-300 rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors">
+                <a className={`flex items-center text-gray-300 rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors ${
+                  sidebarCollapsed ? 'lg:justify-center lg:px-2 lg:py-3 px-4 py-3' : 'space-x-3 px-4 py-3'
+                }`}>
                   <History className="h-5 w-5" />
-                  <span>Transaction History</span>
+                  {!sidebarCollapsed && <span className="lg:block">Transaction History</span>}
                 </a>
               </Link>
               
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center space-x-3 px-4 py-3 text-gray-300 rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors text-left"
+                className={`w-full flex items-center text-gray-300 rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors text-left ${
+                  sidebarCollapsed ? 'lg:justify-center lg:px-2 lg:py-3 px-4 py-3' : 'space-x-3 px-4 py-3'
+                }`}
               >
                 <LogOut className="h-5 w-5" />
-                <span>Logout</span>
+                {!sidebarCollapsed && <span className="lg:block">Logout</span>}
               </button>
             </nav>
           </div>
         </aside>
 
+        {/* Overlay for mobile when sidebar is open */}
+        {!sidebarCollapsed && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+            onClick={() => setSidebarCollapsed(true)}
+          />
+        )}
+
         {/* Main Content */}
-        <main className="flex-1 p-8">
+        <main className={`flex-1 transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-0' : 'lg:ml-0'} p-8 ${
+          sidebarCollapsed ? '' : 'pt-16 lg:pt-8'
+        }`}>
           {/* Welcome Section */}
           <div className="bg-gradient-to-r from-primary to-purple-600 rounded-xl p-6 text-white">
             <h2 className="text-2xl font-bold mb-2">
