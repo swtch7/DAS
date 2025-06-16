@@ -15,7 +15,9 @@ import {
   Plus,
   ArrowRightLeft,
   TrendingUp,
-  Gamepad2
+  Gamepad2,
+  ShoppingCart,
+  Clock
 } from "lucide-react";
 import CreditPurchaseModal from "@/components/credit-purchase-modal";
 import RedeemModal from "@/components/redeem-modal";
@@ -37,6 +39,35 @@ export default function Dashboard() {
     creditsRequested: number;
     usdAmount: string;
   } | null>(null);
+
+  // Query active purchases for current user
+  const { data: activePurchases } = useQuery({
+    queryKey: ['/api/admin/credit-requests'],
+    select: (data: any[]) => data?.filter(purchase => 
+      purchase.userId === user?.id && 
+      purchase.status !== 'completed' && 
+      purchase.status !== 'cancelled'
+    ) || [],
+    enabled: !!user?.id,
+    refetchInterval: 5000,
+  });
+
+  // Update latest purchase based on active purchases
+  useEffect(() => {
+    if (activePurchases && activePurchases.length > 0) {
+      const latest = activePurchases[0];
+      if (!latestPurchase || latestPurchase.id !== latest.id) {
+        setLatestPurchase({
+          id: latest.id,
+          creditsRequested: latest.creditsRequested,
+          usdAmount: latest.usdAmount
+        });
+      }
+    } else if (activePurchases && activePurchases.length === 0 && latestPurchase) {
+      setLatestPurchase(null);
+      setShowTracker(false);
+    }
+  }, [activePurchases, latestPurchase]);
 
   // Check for existing active purchase on load and clear if user changed
   useEffect(() => {
@@ -157,6 +188,21 @@ export default function Dashboard() {
 
       <div className="flex">
         <CollapsibleSidebar onLogout={handleLogout} />
+
+        {/* Purchase Progress Indicator - Fixed position */}
+        {latestPurchase && !showTracker && (
+          <div className="fixed bottom-6 right-6 z-30">
+            <Button
+              onClick={() => setShowTracker(true)}
+              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-full p-4 animate-pulse"
+            >
+              <div className="flex items-center gap-2">
+                <ShoppingCart className="h-5 w-5" />
+                <span className="hidden sm:block">Purchase in Progress</span>
+              </div>
+            </Button>
+          </div>
+        )}
 
         {/* Main Content */}
         <main className="flex-1 p-8 pt-20 lg:pt-8">
@@ -341,25 +387,33 @@ export default function Dashboard() {
 
       {/* Purchase Tracker Sidebar */}
       {showTracker && latestPurchase && (
-        <div className="fixed top-0 right-0 h-full z-50">
-          <PurchaseTrackerSidebar
-            purchaseId={latestPurchase.id}
-            creditsRequested={latestPurchase.creditsRequested}
-            usdAmount={latestPurchase.usdAmount}
-            onComplete={() => {
-              setShowTracker(false);
-              setLatestPurchase(null);
-              localStorage.removeItem('activePurchase');
-              queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-              queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-            }}
-            onClose={() => {
-              setShowTracker(false);
-              setLatestPurchase(null);
-              localStorage.removeItem('activePurchase');
-            }}
+        <>
+          {/* Backdrop - clicking dismisses tracker but keeps progress indicator */}
+          <div 
+            className="fixed inset-0 bg-black/50 z-40"
+            onClick={() => setShowTracker(false)}
           />
-        </div>
+          
+          {/* Sidebar */}
+          <div className="fixed top-0 right-0 h-full z-50">
+            <PurchaseTrackerSidebar
+              purchaseId={latestPurchase.id}
+              creditsRequested={latestPurchase.creditsRequested}
+              usdAmount={latestPurchase.usdAmount}
+              onComplete={() => {
+                setShowTracker(false);
+                setLatestPurchase(null);
+                localStorage.removeItem('activePurchase');
+                queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+                queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+              }}
+              onClose={() => {
+                // Only hide tracker, keep latestPurchase so progress indicator shows
+                setShowTracker(false);
+              }}
+            />
+          </div>
+        </>
       )}
 
     </div>
