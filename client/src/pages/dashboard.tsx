@@ -14,7 +14,8 @@ import {
   DollarSign,
   Plus,
   ArrowRightLeft,
-  TrendingUp
+  TrendingUp,
+  Gamepad2
 } from "lucide-react";
 import CreditPurchaseModal from "@/components/credit-purchase-modal";
 import RedeemModal from "@/components/redeem-modal";

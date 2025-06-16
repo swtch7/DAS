@@ -7,13 +7,9 @@ import {
   Play, 
   Users, 
   Trophy, 
-  Coins, 
-  Gamepad2, 
-  Home, 
-  User, 
-  History, 
-  LogOut 
+  Coins
 } from "lucide-react";
+import CollapsibleSidebar from "@/components/collapsible-sidebar";
 // Using asset imports for game images
 import magicCityImage from "@assets/Magic City_1750085095287.png";
 import ultraPandaImage from "@assets/Ultra Panda_1750085098231.png";
@@ -101,55 +97,7 @@ export default function Games() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900">
       <div className="flex">
-        {/* Sidebar */}
-        <aside className="w-64 bg-zinc-800/50 backdrop-blur-sm border-r border-zinc-700 min-h-screen">
-          <div className="p-6">
-            <div className="flex items-center space-x-3 mb-8">
-              <div className="w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
-                <Gamepad2 className="h-5 w-5 text-black" />
-              </div>
-              <span className="text-xl font-bold text-white">Gaming Wallet</span>
-            </div>
-            
-            <nav className="space-y-2">
-              <Link href="/">
-                <a className="flex items-center space-x-3 px-4 py-3 text-gray-300 rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors">
-                  <Home className="h-5 w-5" />
-                  <span>Dashboard</span>
-                </a>
-              </Link>
-              
-              <Link href="/profile">
-                <a className="flex items-center space-x-3 px-4 py-3 text-gray-300 rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors">
-                  <User className="h-5 w-5" />
-                  <span>Profile</span>
-                </a>
-              </Link>
-              
-              <Link href="/games">
-                <a className="flex items-center space-x-3 px-4 py-3 text-gray-300 rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors bg-zinc-700/30 text-white">
-                  <Gamepad2 className="h-5 w-5" />
-                  <span>Games</span>
-                </a>
-              </Link>
-              
-              <Link href="/transactions">
-                <a className="flex items-center space-x-3 px-4 py-3 text-gray-300 rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors">
-                  <History className="h-5 w-5" />
-                  <span>Transaction History</span>
-                </a>
-              </Link>
-              
-              <button
-                onClick={() => window.location.href = "/api/logout"}
-                className="w-full flex items-center space-x-3 px-4 py-3 text-gray-300 rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors text-left"
-              >
-                <LogOut className="h-5 w-5" />
-                <span>Logout</span>
-              </button>
-            </nav>
-          </div>
-        </aside>
+        <CollapsibleSidebar onLogout={() => window.location.href = "/api/logout"} />
 
         {/* Main Content */}
         <main className="flex-1 p-8">
