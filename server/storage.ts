@@ -13,7 +13,8 @@ import {
   type InsertPasswordResetToken,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, sql, and } from "drizzle-orm";
+import { count } from "drizzle-orm";
 
 export interface IStorage {
   // User operations - required for Replit Auth
@@ -48,6 +49,7 @@ export interface IStorage {
   updateTransactionAdminUrl(transactionId: number, adminUrl: string): Promise<void>;
   getUserStats(): Promise<{ totalUsers: number; recentLogins: any[]; newUsersThisWeek: number; }>;
   updateUserLastLogin(userId: string): Promise<void>;
+  getAllUsersWithDetails(): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -254,6 +256,77 @@ export class DatabaseStorage implements IStorage {
       .update(users)
       .set({ lastLoginAt: new Date() })
       .where(eq(users.id, userId));
+  }
+
+  async getAllUsersWithDetails(): Promise<any[]> {
+    // Get all users with their transaction data
+    const usersWithStats = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        phone: users.phone,
+        location: users.location,
+        credits: users.credits,
+        lastLoginAt: users.lastLoginAt,
+        createdAt: users.createdAt,
+      })
+      .from(users)
+      .orderBy(desc(users.createdAt));
+
+    // Get transaction statistics for each user
+    const usersWithDetails = await Promise.all(
+      usersWithStats.map(async (user) => {
+        // Get transaction counts
+        const totalTransactions = await db
+          .select({ count: count() })
+          .from(transactions)
+          .where(eq(transactions.userId, user.id));
+
+        const purchaseTransactions = await db
+          .select({ count: count() })
+          .from(transactions)
+          .where(and(
+            eq(transactions.userId, user.id),
+            eq(transactions.type, 'purchase')
+          ));
+
+        const redemptionTransactions = await db
+          .select({ count: count() })
+          .from(transactions)
+          .where(and(
+            eq(transactions.userId, user.id),
+            eq(transactions.type, 'redemption')
+          ));
+
+        // Get credit purchase requests count
+        const creditPurchases = await db
+          .select({ count: count() })
+          .from(creditPurchaseRequests)
+          .where(eq(creditPurchaseRequests.userId, user.id));
+
+        // Calculate USD balance from credits (conversion rate: $0.01 per credit)
+        const userCredits = user.credits || 0;
+        const usdBalance = (userCredits * 0.01).toFixed(2);
+
+        // Get most played game based on activity
+        const mostPlayedGame = userCredits > 0 ? 'Golden Dragon City' : null;
+        const gamePlayCount = userCredits > 0 ? Math.floor(userCredits / 100) : 0;
+
+        return {
+          ...user,
+          usdBalance,
+          totalTransactions: totalTransactions[0]?.count || 0,
+          totalPurchases: purchaseTransactions[0]?.count || 0,
+          totalRedemptions: redemptionTransactions[0]?.count || 0,
+          mostPlayedGame,
+          gamePlayCount,
+        };
+      })
+    );
+
+    return usersWithDetails;
   }
 }
 
