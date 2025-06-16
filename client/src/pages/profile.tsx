@@ -13,16 +13,12 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { 
-  Gamepad2, 
-  Home, 
-  User as UserIcon, 
-  History, 
-  LogOut,
   Phone,
   MapPin,
   Mail,
   UserCircle
 } from "lucide-react";
+import CollapsibleSidebar from "@/components/collapsible-sidebar";
 
 const profileSchema = z.object({
   phone: z.string().min(10, "Phone number must be at least 10 digits"),
