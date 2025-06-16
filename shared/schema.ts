@@ -34,6 +34,7 @@ export const users = pgTable("users", {
   phone: varchar("phone"),
   location: varchar("location"),
   credits: integer("credits").default(0),
+  usdBalance: decimal("usd_balance", { precision: 10, scale: 2 }).default("0.00"),
   gameUsername: varchar("game_username"),
   gamePassword: varchar("game_password"),
   // Manual account fields

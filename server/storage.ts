@@ -3,6 +3,7 @@ import {
   transactions,
   creditPurchaseRequests,
   passwordResetTokens,
+  sessions,
   type User,
   type UpsertUser,
   type Transaction,
@@ -13,7 +14,7 @@ import {
   type InsertPasswordResetToken,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, sql, and } from "drizzle-orm";
 
 export interface IStorage {
   // User operations - required for Replit Auth
@@ -48,6 +49,8 @@ export interface IStorage {
   updateTransactionAdminUrl(transactionId: number, adminUrl: string): Promise<void>;
   getUserStats(): Promise<{ totalUsers: number; recentLogins: any[]; newUsersThisWeek: number; }>;
   updateUserLastLogin(userId: string): Promise<void>;
+  getAllUsersForAdmin(): Promise<any[]>;
+  deleteUser(userId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -254,6 +257,94 @@ export class DatabaseStorage implements IStorage {
       .update(users)
       .set({ lastLoginAt: new Date() })
       .where(eq(users.id, userId));
+  }
+
+  async getAllUsersForAdmin(): Promise<any[]> {
+    // Get all users with their transaction counts and most played game
+    const usersWithStats = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        phone: users.phone,
+        location: users.location,
+        credits: users.credits,
+        usdBalance: users.usdBalance,
+        lastLoginAt: users.lastLoginAt,
+        createdAt: users.createdAt,
+        gameUsername: users.gameUsername,
+        gamePassword: users.gamePassword,
+      })
+      .from(users)
+      .orderBy(desc(users.createdAt));
+
+    // Get transaction stats for each user
+    const usersWithTransactionStats = await Promise.all(
+      usersWithStats.map(async (user) => {
+        // Get total transactions count
+        const totalTransactions = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(transactions)
+          .where(eq(transactions.userId, user.id));
+
+        // Get purchase count
+        const purchaseCount = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(transactions)
+          .where(and(eq(transactions.userId, user.id), eq(transactions.type, 'purchase')));
+
+        // Get redemption count
+        const redemptionCount = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(transactions)
+          .where(and(eq(transactions.userId, user.id), eq(transactions.type, 'redemption')));
+
+        // Get credit purchase requests count
+        const creditPurchaseCount = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(creditPurchaseRequests)
+          .where(eq(creditPurchaseRequests.userId, user.id));
+
+        // For now, we'll use a placeholder for most played game
+        // This would need to be implemented based on actual game session tracking
+        const mostPlayedGame = user.gameUsername ? 'Golden Dragon City' : undefined;
+        const gamePlayCount = user.gameUsername ? 1 : 0;
+
+        return {
+          ...user,
+          totalTransactions: totalTransactions[0]?.count || 0,
+          totalPurchases: purchaseCount[0]?.count || 0,
+          totalRedemptions: redemptionCount[0]?.count || 0,
+          totalCreditRequests: creditPurchaseCount[0]?.count || 0,
+          mostPlayedGame,
+          gamePlayCount,
+          usdBalance: user.usdBalance || '0.00',
+        };
+      })
+    );
+
+    return usersWithTransactionStats;
+  }
+
+  async deleteUser(userId: string): Promise<void> {
+    // Delete user and all related data (cascading delete)
+    await db.transaction(async (tx) => {
+      // Delete transactions
+      await tx.delete(transactions).where(eq(transactions.userId, userId));
+      
+      // Delete credit purchase requests
+      await tx.delete(creditPurchaseRequests).where(eq(creditPurchaseRequests.userId, userId));
+      
+      // Delete password reset tokens
+      await tx.delete(passwordResetTokens).where(eq(passwordResetTokens.userId, userId));
+      
+      // Delete sessions
+      await tx.delete(sessions).where(eq(sessions.userId, userId));
+      
+      // Finally delete the user
+      await tx.delete(users).where(eq(users.id, userId));
+    });
   }
 }
 
