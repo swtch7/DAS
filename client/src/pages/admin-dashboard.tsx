@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { formatDistanceToNow } from "date-fns";
-import { Users, Clock, TrendingUp, DollarSign, CreditCard, CheckCircle, Copy, LogOut, Upload, Eye } from "lucide-react";
+import { Users, Clock, TrendingUp, DollarSign, CreditCard, CheckCircle, Copy, LogOut, Upload, Eye, UserCheck, Gamepad2, Calendar } from "lucide-react";
 
 interface CreditPurchaseRequest {
   id: number;
@@ -54,6 +54,24 @@ interface AdminStats {
   newUsersThisWeek: number;
 }
 
+interface UserDetail {
+  id: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  location?: string;
+  credits: number;
+  usdBalance: string;
+  lastLoginAt?: string;
+  createdAt: string;
+  totalTransactions: number;
+  totalPurchases: number;
+  totalRedemptions: number;
+  mostPlayedGame?: string;
+  gamePlayCount: number;
+}
+
 export default function AdminDashboard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -73,6 +91,11 @@ export default function AdminDashboard() {
   // Fetch redemption requests
   const { data: redemptions = [], isLoading: loadingRedemptions } = useQuery<RedemptionTransaction[]>({
     queryKey: ["/api/admin/redemptions"],
+  });
+
+  // Fetch all users
+  const { data: allUsers = [], isLoading: loadingUsers } = useQuery<UserDetail[]>({
+    queryKey: ["/api/admin/users"],
   });
 
   // Update admin URL mutation
@@ -273,9 +296,12 @@ export default function AdminDashboard() {
         </div>
 
         <Tabs defaultValue="stats" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 bg-zinc-800 border-zinc-700">
+          <TabsList className="grid w-full grid-cols-5 bg-zinc-800 border-zinc-700">
             <TabsTrigger value="stats" className="data-[state=active]:bg-yellow-600">
               Statistics
+            </TabsTrigger>
+            <TabsTrigger value="users" className="data-[state=active]:bg-yellow-600">
+              Users
             </TabsTrigger>
             <TabsTrigger value="buy" className="data-[state=active]:bg-yellow-600">
               Open Buy Credits
@@ -376,6 +402,143 @@ export default function AdminDashboard() {
                 </Card>
               </>
             )}
+          </TabsContent>
+
+          <TabsContent value="users" className="space-y-6">
+            <Card className="bg-zinc-800 border-zinc-700">
+              <CardHeader>
+                <CardTitle className="text-zinc-200 flex items-center gap-2">
+                  <UserCheck className="h-5 w-5 text-blue-400" />
+                  All Users
+                </CardTitle>
+                <CardDescription className="text-zinc-400">
+                  Comprehensive user information and activity tracking
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loadingUsers ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400 mx-auto"></div>
+                    <p className="mt-2 text-zinc-400">Loading users...</p>
+                  </div>
+                ) : allUsers.length > 0 ? (
+                  <div className="space-y-4">
+                    {allUsers.map((user) => (
+                      <div key={user.id} className="border border-zinc-600 rounded-lg p-4 bg-zinc-700/50">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                          {/* User Basic Info */}
+                          <div className="space-y-3">
+                            <div>
+                              <h3 className="font-semibold text-white text-lg">
+                                {user.firstName && user.lastName 
+                                  ? `${user.firstName} ${user.lastName}` 
+                                  : user.email}
+                              </h3>
+                              <p className="text-zinc-300 text-sm">{user.email}</p>
+                              {user.phone && (
+                                <p className="text-zinc-400 text-sm flex items-center gap-1">
+                                  📱 {user.phone}
+                                </p>
+                              )}
+                              {user.location && (
+                                <p className="text-zinc-400 text-sm flex items-center gap-1">
+                                  📍 {user.location}
+                                </p>
+                              )}
+                            </div>
+                            
+                            <div className="flex items-center gap-2 text-sm">
+                              <Calendar className="h-4 w-4 text-zinc-400" />
+                              <span className="text-zinc-400">
+                                Joined {formatDistanceToNow(new Date(user.createdAt))} ago
+                              </span>
+                            </div>
+                            
+                            {user.lastLoginAt && (
+                              <div className="flex items-center gap-2 text-sm">
+                                <Clock className="h-4 w-4 text-green-400" />
+                                <span className="text-zinc-400">
+                                  Last login {formatDistanceToNow(new Date(user.lastLoginAt))} ago
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Financial Info */}
+                          <div className="space-y-3">
+                            <h4 className="font-medium text-white">Financial Overview</h4>
+                            <div className="space-y-2">
+                              <div className="flex justify-between items-center">
+                                <span className="text-zinc-400 text-sm">Credits:</span>
+                                <span className="text-yellow-400 font-medium">{user.credits.toLocaleString()}</span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-zinc-400 text-sm">USD Balance:</span>
+                                <span className="text-green-400 font-medium">${user.usdBalance}</span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-zinc-400 text-sm">Total Purchases:</span>
+                                <span className="text-blue-400 font-medium">{user.totalPurchases}</span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-zinc-400 text-sm">Total Redemptions:</span>
+                                <span className="text-purple-400 font-medium">{user.totalRedemptions}</span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-zinc-400 text-sm">Total Transactions:</span>
+                                <span className="text-zinc-300 font-medium">{user.totalTransactions}</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Gaming Activity */}
+                          <div className="space-y-3">
+                            <h4 className="font-medium text-white">Gaming Activity</h4>
+                            {user.mostPlayedGame ? (
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <Gamepad2 className="h-4 w-4 text-orange-400" />
+                                  <span className="text-zinc-400 text-sm">Favorite Game:</span>
+                                </div>
+                                <div className="bg-zinc-600/50 rounded-lg p-3">
+                                  <p className="text-white font-medium">{user.mostPlayedGame}</p>
+                                  <p className="text-zinc-400 text-sm">{user.gamePlayCount} sessions</p>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="text-zinc-400 text-sm">
+                                No gaming activity yet
+                              </div>
+                            )}
+                            
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              <Badge 
+                                variant="outline" 
+                                className={`text-xs ${user.credits >= 1000 ? 'border-yellow-400 text-yellow-400' : 'border-zinc-500 text-zinc-400'}`}
+                              >
+                                {user.credits >= 1000 ? 'VIP Player' : 'Regular Player'}
+                              </Badge>
+                              {user.totalPurchases >= 5 && (
+                                <Badge variant="outline" className="text-xs border-green-400 text-green-400">
+                                  Frequent Buyer
+                                </Badge>
+                              )}
+                              {user.lastLoginAt && new Date(user.lastLoginAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) && (
+                                <Badge variant="outline" className="text-xs border-blue-400 text-blue-400">
+                                  Active User
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-zinc-400 text-center py-8">No users found</p>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="buy" className="space-y-6">
