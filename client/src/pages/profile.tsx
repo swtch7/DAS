@@ -93,7 +93,7 @@ export default function Profile() {
         <CollapsibleSidebar onLogout={() => window.location.href = "/api/logout"} />
 
         {/* Main Content */}
-        <main className="flex-1 p-8">
+        <main className="flex-1 p-8 pt-20 lg:pt-8">
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-4xl font-bold text-white mb-4">Profile Settings</h1>

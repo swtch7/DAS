@@ -23,6 +23,14 @@ export default function CollapsibleSidebar({ onLogout }: CollapsibleSidebarProps
 
   return (
     <>
+      {/* Mobile menu button - always visible on mobile */}
+      <button
+        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+        className="fixed top-4 left-4 z-50 lg:hidden bg-zinc-800 border border-zinc-700 text-white p-3 rounded-lg hover:bg-zinc-700 transition-colors shadow-lg"
+      >
+        <Menu className="h-6 w-6" />
+      </button>
+
       {/* Sidebar */}
       <aside className={`${
         sidebarCollapsed ? '-translate-x-full lg:translate-x-0 lg:w-16' : 'translate-x-0 lg:w-64'

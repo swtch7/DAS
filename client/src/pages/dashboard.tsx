@@ -159,7 +159,7 @@ export default function Dashboard() {
         <CollapsibleSidebar onLogout={handleLogout} />
 
         {/* Main Content */}
-        <main className="flex-1 p-8">
+        <main className="flex-1 p-8 pt-20 lg:pt-8">
           {/* Welcome Section */}
           <div className="bg-gradient-to-r from-primary to-purple-600 rounded-xl p-6 text-white">
             <h2 className="text-2xl font-bold mb-2">

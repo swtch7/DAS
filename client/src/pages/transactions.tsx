@@ -8,7 +8,8 @@ import {
   ArrowRightLeft,
   DollarSign,
   Calendar,
-  TrendingUp
+  TrendingUp,
+  Clock
 } from "lucide-react";
 import CollapsibleSidebar from "@/components/collapsible-sidebar";
 
@@ -75,7 +76,7 @@ export default function Transactions() {
         <CollapsibleSidebar onLogout={() => window.location.href = "/api/logout"} />
 
         {/* Main Content */}
-        <main className="flex-1 p-8">
+        <main className="flex-1 p-8 pt-20 lg:pt-8">
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-4xl font-bold text-white mb-4">Transaction History</h1>
@@ -139,7 +140,7 @@ export default function Transactions() {
           <Card className="bg-zinc-800/50 border-zinc-700">
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
-                <History className="h-5 w-5" />
+                <Clock className="h-5 w-5" />
                 All Transactions
               </CardTitle>
             </CardHeader>
@@ -151,7 +152,7 @@ export default function Transactions() {
                 </div>
               ) : transactions.length === 0 ? (
                 <div className="text-center py-12">
-                  <History className="h-12 w-12 text-gray-500 mx-auto mb-4" />
+                  <Clock className="h-12 w-12 text-gray-500 mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-white mb-2">No Transactions Yet</h3>
                   <p className="text-gray-400 mb-6">
                     Your transaction history will appear here once you make your first purchase or redemption.
