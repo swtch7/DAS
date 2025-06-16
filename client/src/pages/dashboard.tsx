@@ -161,7 +161,7 @@ export default function Dashboard() {
       {/* Mobile sidebar toggle */}
       <button
         onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-        className="fixed top-4 left-4 z-50 lg:hidden bg-zinc-800 border border-zinc-700 text-white p-2 rounded-lg hover:bg-zinc-700 transition-colors"
+        className="fixed top-4 right-4 z-50 lg:hidden bg-zinc-800 border border-zinc-700 text-white p-2 rounded-lg hover:bg-zinc-700 transition-colors"
       >
         <Menu className="h-5 w-5" />
       </button>
@@ -169,7 +169,9 @@ export default function Dashboard() {
       {/* Desktop sidebar toggle */}
       <button
         onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-        className="fixed top-4 left-4 z-50 hidden lg:block bg-zinc-800 border border-zinc-700 text-white p-2 rounded-lg hover:bg-zinc-700 transition-colors"
+        className={`fixed top-6 z-50 hidden lg:block bg-zinc-800 border border-zinc-700 text-white p-2 rounded-lg hover:bg-zinc-700 transition-all duration-300 ${
+          sidebarCollapsed ? 'left-4' : 'left-72'
+        }`}
       >
         {sidebarCollapsed ? <Menu className="h-5 w-5" /> : <X className="h-5 w-5" />}
       </button>
