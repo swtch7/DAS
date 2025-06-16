@@ -339,8 +339,8 @@ export class DatabaseStorage implements IStorage {
       // Delete password reset tokens
       await tx.delete(passwordResetTokens).where(eq(passwordResetTokens.userId, userId));
       
-      // Delete sessions
-      await tx.delete(sessions).where(eq(sessions.userId, userId));
+      // Delete sessions (sessions table uses sid as primary key, not userId)
+      // For now, we'll skip session deletion as it's managed by the session store
       
       // Finally delete the user
       await tx.delete(users).where(eq(users.id, userId));

@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { formatDistanceToNow } from "date-fns";
-import { Users, Clock, TrendingUp, DollarSign, CreditCard, CheckCircle, Copy, LogOut, Upload, Eye, UserCheck, Gamepad2, Calendar } from "lucide-react";
+import { Users, Clock, TrendingUp, DollarSign, CreditCard, CheckCircle, Copy, LogOut, Upload, Eye, UserCheck, Gamepad2, Calendar, Trash2 } from "lucide-react";
 
 interface CreditPurchaseRequest {
   id: number;
@@ -176,6 +176,34 @@ export default function AdminDashboard() {
       });
     },
   });
+
+  // Delete user mutation
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      return apiRequest("DELETE", `/api/admin/users/${userId}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "User Deleted",
+        description: "User has been deleted successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: `Failed to delete user: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDeleteUser = (userId: string, userName: string) => {
+    if (window.confirm(`Are you sure you want to delete user "${userName}"? This action cannot be undone and will remove all their data.`)) {
+      deleteUserMutation.mutate(userId);
+    }
+  };
 
   const handleUpdateUrl = (id: number, type: 'purchase' | 'redemption') => {
     const key = `${type}-${id}`;
@@ -528,6 +556,19 @@ export default function AdminDashboard() {
                                   Active User
                                 </Badge>
                               )}
+                            </div>
+                            
+                            <div className="mt-4 pt-3 border-t border-zinc-600">
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleDeleteUser(user.id, user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email)}
+                                disabled={deleteUserMutation.isPending}
+                                className="w-full"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                {deleteUserMutation.isPending ? 'Deleting...' : 'Delete User'}
+                              </Button>
                             </div>
                           </div>
                         </div>
