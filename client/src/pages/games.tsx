@@ -14,7 +14,11 @@ import {
   History, 
   LogOut 
 } from "lucide-react";
-// Using data URL for Golden Dragon image
+// Using asset imports for game images
+import magicCityImage from "@assets/Magic City_1750085095287.png";
+import ultraPandaImage from "@assets/Ultra Panda_1750085098231.png";
+
+// Using existing Golden Dragon image path
 const goldenDragonImage = "/attached_assets/golden%20dragon_1749824618883.png";
 
 export default function Games() {
@@ -37,13 +41,61 @@ export default function Games() {
         "Crafting and trading",
         "Epic boss raids"
       ]
+    },
+    {
+      id: 2,
+      name: "Ultra Panda",
+      image: ultraPandaImage,
+      description: "Join the adorable panda on an exciting slot adventure! Spin the reels, collect golden coins, and unlock amazing bonus features in this colorful casino game.",
+      status: "Live",
+      players: "1,924",
+      minCredits: 50,
+      categories: ["Slots", "Casino", "Adventure"],
+      features: [
+        "Multiple slot machines",
+        "Progressive jackpots",
+        "Bonus mini-games",
+        "Daily rewards system",
+        "Lucky wheel spins"
+      ]
+    },
+    {
+      id: 3,
+      name: "Magic City",
+      image: magicCityImage,
+      description: "Enter the mystical realm of Magic City where spells and fortunes await. Experience magical slot gameplay with enchanting graphics and spellbinding wins.",
+      status: "Live", 
+      players: "3,156",
+      minCredits: 75,
+      categories: ["Slots", "Magic", "Fantasy"],
+      features: [
+        "Magical themed slots",
+        "Spell-based bonus rounds",
+        "Enchanted free spins",
+        "Mystical multipliers",
+        "Wizard tournaments"
+      ]
     }
   ];
 
   const handlePlayGame = (game: any) => {
     // Here you would typically redirect to the game or open game launcher
     console.log(`Launching ${game.name}...`);
-    window.open('https://goldendragoncity.com', '_blank');
+    
+    // Open different URLs based on the game
+    switch (game.id) {
+      case 1: // Golden Dragon
+        window.open('https://goldendragoncity.com', '_blank');
+        break;
+      case 2: // Ultra Panda
+        window.open('https://ultrapanda777.com', '_blank');
+        break;
+      case 3: // Magic City
+        window.open('https://magiccity777.com', '_blank');
+        break;
+      default:
+        console.log('Game URL not configured');
+    }
   };
 
   return (
@@ -118,7 +170,7 @@ export default function Games() {
                   <Play className="h-5 w-5 text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-white">1</p>
+                  <p className="text-2xl font-bold text-white">3</p>
                   <p className="text-sm text-gray-400">Games Available</p>
                 </div>
               </div>
@@ -132,7 +184,7 @@ export default function Games() {
                   <Users className="h-5 w-5 text-green-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-white">2.8K+</p>
+                  <p className="text-2xl font-bold text-white">7.9K+</p>
                   <p className="text-sm text-gray-400">Active Players</p>
                 </div>
               </div>
