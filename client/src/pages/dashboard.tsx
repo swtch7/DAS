@@ -5,6 +5,7 @@ import type { User, Transaction } from "@shared/schema";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "wouter";
 import { useState, useEffect } from "react";
 import { 
@@ -28,6 +29,7 @@ import CollapsibleSidebar from "@/components/collapsible-sidebar";
 export default function Dashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [showBuyModal, setShowBuyModal] = useState(false);
   const [showRedeemModal, setShowRedeemModal] = useState(false);
   const [showTracker, setShowTracker] = useState(false);
@@ -198,7 +200,7 @@ export default function Dashboard() {
             >
               <div className="flex items-center gap-2">
                 <ShoppingCart className="h-5 w-5" />
-                <span className="hidden sm:block">Purchase in Progress</span>
+                <span className="hidden sm:block">{t('dashboard.purchaseInProgress')}</span>
               </div>
             </Button>
           </div>
@@ -209,7 +211,7 @@ export default function Dashboard() {
           {/* Welcome Section */}
           <div className="bg-gradient-to-r from-primary to-purple-600 rounded-xl p-6 text-white">
             <h2 className="text-2xl font-bold mb-2">
-              Welcome back, {userData?.firstName || "User"}!
+              {t('dashboard.welcome')}, {userData?.firstName || "User"}!
             </h2>
             <p className="text-purple-100">
               Manage your gaming credits and access Golden Dragon City seamlessly.
@@ -221,7 +223,7 @@ export default function Dashboard() {
             <Card className="bg-surface border-gray-700">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-white">Available Credits</h3>
+                  <h3 className="text-lg font-semibold text-white">{t('dashboard.credits')}</h3>
                   <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center">
                     <Coins className="text-accent h-5 w-5" />
                   </div>
@@ -238,7 +240,7 @@ export default function Dashboard() {
             <Card className="bg-surface border-gray-700">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-white">USD Value</h3>
+                  <h3 className="text-lg font-semibold text-white">{t('dashboard.balance')}</h3>
                   <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
                     <DollarSign className="text-green-500 h-5 w-5" />
                   </div>
@@ -263,7 +265,7 @@ export default function Dashboard() {
                   className="bg-primary hover:bg-primary/80 text-white rounded-lg p-4 h-auto flex-col space-y-2 transition-colors group"
                 >
                   <Plus className="h-6 w-6 group-hover:scale-110 transition-transform" />
-                  <div className="font-medium">Buy Credits</div>
+                  <div className="font-medium">{t('dashboard.buyCredits')}</div>
                   <div className="text-sm text-purple-200">Purchase gaming credits</div>
                 </Button>
                 
@@ -272,7 +274,7 @@ export default function Dashboard() {
                   className="bg-accent hover:bg-accent/80 text-white rounded-lg p-4 h-auto flex-col space-y-2 transition-colors group"
                 >
                   <ArrowRightLeft className="h-6 w-6 group-hover:scale-110 transition-transform" />
-                  <div className="font-medium">Redeem Credits</div>
+                  <div className="font-medium">{t('dashboard.redeemCredits')}</div>
                   <div className="text-sm text-green-100">Convert to cash</div>
                 </Button>
                 
