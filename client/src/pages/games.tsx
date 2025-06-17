@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "wouter";
 import { 
   Play, 
@@ -19,6 +20,7 @@ const goldenDragonImage = "/attached_assets/golden%20dragon_1749824618883.png";
 
 export default function Games() {
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   const games = [
     {
@@ -103,9 +105,9 @@ export default function Games() {
         <main className="flex-1 p-8 pt-20 lg:pt-8">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-4xl font-bold text-white mb-4">Game Library</h1>
+            <h1 className="text-4xl font-bold text-white mb-4">{t('games.title')}</h1>
             <p className="text-gray-400 text-lg">
-              Discover amazing games powered by your gaming credits
+              {t('games.subtitle')}
             </p>
           </div>
 

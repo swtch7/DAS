@@ -107,6 +107,7 @@ DAS (Digital Asset System) is a gaming-inspired financial management platform th
 ```
 Changelog:
 - June 16, 2025. Initial setup
+- June 16, 2025. Added comprehensive Spanish language support with translation system, language selection in Profile settings, and translations for all navigation and main pages
 ```
 
 ## User Preferences

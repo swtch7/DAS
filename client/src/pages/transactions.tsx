@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { 
   Plus,
   ArrowRightLeft,
@@ -26,6 +27,7 @@ interface Transaction {
 
 export default function Transactions() {
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   // Fetch user transactions
   const { data: transactionsData, isLoading } = useQuery({
