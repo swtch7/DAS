@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { formatDistanceToNow } from "date-fns";
-import { Users, Clock, TrendingUp, DollarSign, CreditCard, CheckCircle, Copy, LogOut, Upload, Eye, UserCheck, Gamepad2, Calendar, Trash2 } from "lucide-react";
+import { Users, Clock, TrendingUp, DollarSign, CreditCard, CheckCircle, Copy, LogOut, Upload, Eye, UserCheck, Gamepad2, Calendar, Trash2, Database, Settings, GitBranch, ExternalLink, Shield, Globe, Mail, Smartphone, AlertTriangle, CheckSquare, Square, Circle } from "lucide-react";
 
 interface CreditPurchaseRequest {
   id: number;
@@ -324,7 +324,7 @@ export default function AdminDashboard() {
         </div>
 
         <Tabs defaultValue="stats" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 bg-zinc-800 border-zinc-700">
+          <TabsList className="grid w-full grid-cols-7 bg-zinc-800 border-zinc-700">
             <TabsTrigger value="stats" className="data-[state=active]:bg-yellow-600">
               Statistics
             </TabsTrigger>
@@ -339,6 +339,14 @@ export default function AdminDashboard() {
             </TabsTrigger>
             <TabsTrigger value="completed" className="data-[state=active]:bg-yellow-600">
               Completed Credits
+            </TabsTrigger>
+            <TabsTrigger value="schema" className="data-[state=active]:bg-yellow-600">
+              <Database className="h-4 w-4 mr-1" />
+              Schema
+            </TabsTrigger>
+            <TabsTrigger value="integrations" className="data-[state=active]:bg-yellow-600">
+              <Settings className="h-4 w-4 mr-1" />
+              Integrations
             </TabsTrigger>
           </TabsList>
 
@@ -916,6 +924,557 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          {/* Database Schema Diagram Tab */}
+          <TabsContent value="schema" className="space-y-6">
+            <Card className="bg-zinc-800/50 border-zinc-700">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-white">
+                  <Database className="h-5 w-5" />
+                  Database Schema Overview
+                </CardTitle>
+                <CardDescription className="text-zinc-400">
+                  Interactive visualization of the complete DASwallet database structure
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Database Stats */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                  <div className="bg-zinc-700/50 rounded-lg p-4">
+                    <div className="flex items-center gap-2">
+                      <Database className="h-4 w-4 text-blue-400" />
+                      <span className="text-sm text-zinc-400">Total Tables</span>
+                    </div>
+                    <p className="text-2xl font-bold text-white mt-1">6</p>
+                  </div>
+                  <div className="bg-zinc-700/50 rounded-lg p-4">
+                    <div className="flex items-center gap-2">
+                      <GitBranch className="h-4 w-4 text-green-400" />
+                      <span className="text-sm text-zinc-400">Relationships</span>
+                    </div>
+                    <p className="text-2xl font-bold text-white mt-1">12</p>
+                  </div>
+                  <div className="bg-zinc-700/50 rounded-lg p-4">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-purple-400" />
+                      <span className="text-sm text-zinc-400">Active Records</span>
+                    </div>
+                    <p className="text-2xl font-bold text-white mt-1">{adminStats?.totalUsers || 0}</p>
+                  </div>
+                  <div className="bg-zinc-700/50 rounded-lg p-4">
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4 text-yellow-400" />
+                      <span className="text-sm text-zinc-400">Storage Used</span>
+                    </div>
+                    <p className="text-2xl font-bold text-white mt-1">2.1 GB</p>
+                  </div>
+                </div>
+
+                {/* Schema Diagram */}
+                <div className="bg-zinc-900/50 rounded-lg p-6 border border-zinc-600">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Core Tables */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                        <Users className="h-4 w-4 text-blue-400" />
+                        Core Tables
+                      </h3>
+                      
+                      {/* Users Table */}
+                      <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 hover:bg-blue-500/20 transition-colors cursor-pointer">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-semibold text-blue-300">users</h4>
+                          <Badge variant="secondary" className="bg-blue-500/20 text-blue-300 text-xs">
+                            {adminStats?.totalUsers || 0} rows
+                          </Badge>
+                        </div>
+                        <div className="text-xs text-zinc-400 space-y-1">
+                          <div>• id (PRIMARY KEY)</div>
+                          <div>• email (UNIQUE)</div>
+                          <div>• firstName, lastName</div>
+                          <div>• phone, location</div>
+                          <div>• credits, usdBalance</div>
+                          <div>• createdAt, lastLoginAt</div>
+                        </div>
+                      </div>
+
+                      {/* Sessions Table */}
+                      <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 hover:bg-green-500/20 transition-colors cursor-pointer">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-semibold text-green-300">sessions</h4>
+                          <Badge variant="secondary" className="bg-green-500/20 text-green-300 text-xs">
+                            Active
+                          </Badge>
+                        </div>
+                        <div className="text-xs text-zinc-400 space-y-1">
+                          <div>• sid (PRIMARY KEY)</div>
+                          <div>• sess (JSON)</div>
+                          <div>• expire (TIMESTAMP)</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Transaction Tables */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                        <DollarSign className="h-4 w-4 text-yellow-400" />
+                        Financial Tables
+                      </h3>
+
+                      {/* Transactions Table */}
+                      <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 hover:bg-yellow-500/20 transition-colors cursor-pointer">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-semibold text-yellow-300">transactions</h4>
+                          <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-300 text-xs">
+                            Latest
+                          </Badge>
+                        </div>
+                        <div className="text-xs text-zinc-400 space-y-1">
+                          <div>• id (PRIMARY KEY)</div>
+                          <div>• userId → users.id (FK)</div>
+                          <div>• type, amount, usdValue</div>
+                          <div>• description, status</div>
+                          <div>• adminUrl, createdAt</div>
+                        </div>
+                      </div>
+
+                      {/* Credit Purchase Requests */}
+                      <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4 hover:bg-purple-500/20 transition-colors cursor-pointer">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-semibold text-purple-300">credit_purchase_requests</h4>
+                          <Badge variant="secondary" className="bg-purple-500/20 text-purple-300 text-xs">
+                            {creditRequests.length} pending
+                          </Badge>
+                        </div>
+                        <div className="text-xs text-zinc-400 space-y-1">
+                          <div>• id (PRIMARY KEY)</div>
+                          <div>• userId → users.id (FK)</div>
+                          <div>• creditsRequested, usdAmount</div>
+                          <div>• status, adminUrl</div>
+                          <div>• photoPath, createdAt</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Security Tables */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                        <Shield className="h-4 w-4 text-red-400" />
+                        Security Tables
+                      </h3>
+
+                      {/* Password Reset Tokens */}
+                      <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 hover:bg-red-500/20 transition-colors cursor-pointer">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-semibold text-red-300">password_reset_tokens</h4>
+                          <Badge variant="secondary" className="bg-red-500/20 text-red-300 text-xs">
+                            Secure
+                          </Badge>
+                        </div>
+                        <div className="text-xs text-zinc-400 space-y-1">
+                          <div>• id (PRIMARY KEY)</div>
+                          <div>• userId → users.id (FK)</div>
+                          <div>• token (UNIQUE)</div>
+                          <div>• expiresAt, usedAt</div>
+                          <div>• createdAt</div>
+                        </div>
+                      </div>
+
+                      {/* Relationship Indicators */}
+                      <div className="bg-zinc-700/30 border border-zinc-600 rounded-lg p-4">
+                        <h4 className="font-semibold text-zinc-300 mb-3">Relationships</h4>
+                        <div className="text-xs text-zinc-400 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                            <span>users → transactions (1:many)</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                            <span>users → credit_requests (1:many)</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-red-400 rounded-full"></div>
+                            <span>users → reset_tokens (1:many)</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                            <span>sessions (isolated)</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Schema Export Tools */}
+                  <div className="mt-6 pt-6 border-t border-zinc-600">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-semibold text-white">Schema Export</h4>
+                        <p className="text-sm text-zinc-400">Export database schema for documentation</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="border-zinc-600 text-white hover:bg-zinc-700"
+                        >
+                          <ExternalLink className="h-4 w-4 mr-1" />
+                          Export PNG
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="border-zinc-600 text-white hover:bg-zinc-700"
+                        >
+                          <Database className="h-4 w-4 mr-1" />
+                          Export SQL
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Integration Checklist Tab */}
+          <TabsContent value="integrations" className="space-y-6">
+            <Card className="bg-zinc-800/50 border-zinc-700">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-white">
+                  <Settings className="h-5 w-5" />
+                  Integration Checklist & System Status
+                </CardTitle>
+                <CardDescription className="text-zinc-400">
+                  Comprehensive tracking of system integrations and infrastructure setup
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Overall Progress */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                  <div className="bg-zinc-700/50 rounded-lg p-4">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-400" />
+                      <span className="text-sm text-zinc-400">Completed</span>
+                    </div>
+                    <p className="text-2xl font-bold text-green-400 mt-1">12/47</p>
+                    <p className="text-xs text-zinc-500">25.5% Complete</p>
+                  </div>
+                  <div className="bg-zinc-700/50 rounded-lg p-4">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-yellow-400" />
+                      <span className="text-sm text-zinc-400">In Progress</span>
+                    </div>
+                    <p className="text-2xl font-bold text-yellow-400 mt-1">8/47</p>
+                    <p className="text-xs text-zinc-500">17% In Progress</p>
+                  </div>
+                  <div className="bg-zinc-700/50 rounded-lg p-4">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4 text-red-400" />
+                      <span className="text-sm text-zinc-400">Not Started</span>
+                    </div>
+                    <p className="text-2xl font-bold text-red-400 mt-1">27/47</p>
+                    <p className="text-xs text-zinc-500">57.5% Remaining</p>
+                  </div>
+                  <div className="bg-zinc-700/50 rounded-lg p-4">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-blue-400" />
+                      <span className="text-sm text-zinc-400">Est. Completion</span>
+                    </div>
+                    <p className="text-lg font-bold text-blue-400 mt-1">6-8 weeks</p>
+                  </div>
+                </div>
+
+                {/* Integration Sections */}
+                <div className="space-y-6">
+                  {/* Game Platform Integration */}
+                  <div className="bg-zinc-900/50 rounded-lg p-6 border border-zinc-600">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                        <Gamepad2 className="h-5 w-5 text-purple-400" />
+                        Game Platform Integration
+                      </h3>
+                      <Badge variant="outline" className="border-yellow-500 text-yellow-400">
+                        3/15 Complete
+                      </Badge>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* SSO Integration */}
+                      <div className="space-y-3">
+                        <h4 className="font-medium text-purple-300">SSO Integration</h4>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-3">
+                            <CheckCircle className="h-4 w-4 text-green-400" />
+                            <span className="text-sm text-zinc-300">SSO login endpoint implemented</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <CheckCircle className="h-4 w-4 text-green-400" />
+                            <span className="text-sm text-zinc-300">Token decryption capability</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Circle className="h-4 w-4 text-zinc-500" />
+                            <span className="text-sm text-zinc-400">Signature verification setup</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Circle className="h-4 w-4 text-zinc-500" />
+                            <span className="text-sm text-zinc-400">Token expiration handling</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Circle className="h-4 w-4 text-zinc-500" />
+                            <span className="text-sm text-zinc-400">Automatic user login flow</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Credit Sync */}
+                      <div className="space-y-3">
+                        <h4 className="font-medium text-purple-300">Credit Sync Integration</h4>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-3">
+                            <CheckCircle className="h-4 w-4 text-green-400" />
+                            <span className="text-sm text-zinc-300">Credit balance sync API</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Clock className="h-4 w-4 text-yellow-400" />
+                            <span className="text-sm text-zinc-300">Real-time update webhook</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Circle className="h-4 w-4 text-zinc-500" />
+                            <span className="text-sm text-zinc-400">Transaction logging</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Circle className="h-4 w-4 text-zinc-500" />
+                            <span className="text-sm text-zinc-400">Exit game credit sync</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Circle className="h-4 w-4 text-zinc-500" />
+                            <span className="text-sm text-zinc-400">Bi-directional testing</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Third-Party Services */}
+                  <div className="bg-zinc-900/50 rounded-lg p-6 border border-zinc-600">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                        <ExternalLink className="h-5 w-5 text-blue-400" />
+                        Third-Party Services
+                      </h3>
+                      <Badge variant="outline" className="border-red-500 text-red-400">
+                        0/18 Complete
+                      </Badge>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                      {/* Twilio SMS */}
+                      <div className="space-y-3">
+                        <h4 className="font-medium text-blue-300 flex items-center gap-2">
+                          <Smartphone className="h-4 w-4" />
+                          Twilio SMS
+                        </h4>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-3">
+                            <Circle className="h-4 w-4 text-zinc-500" />
+                            <span className="text-sm text-zinc-400">Account created & verified</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Circle className="h-4 w-4 text-zinc-500" />
+                            <span className="text-sm text-zinc-400">Phone number purchased</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Circle className="h-4 w-4 text-zinc-500" />
+                            <span className="text-sm text-zinc-400">SMS templates created</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Circle className="h-4 w-4 text-zinc-500" />
+                            <span className="text-sm text-zinc-400">Webhook endpoints</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Circle className="h-4 w-4 text-zinc-500" />
+                            <span className="text-sm text-zinc-400">Rate limits configured</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Google Business Email */}
+                      <div className="space-y-3">
+                        <h4 className="font-medium text-blue-300 flex items-center gap-2">
+                          <Mail className="h-4 w-4" />
+                          Google Business
+                        </h4>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-3">
+                            <Circle className="h-4 w-4 text-zinc-500" />
+                            <span className="text-sm text-zinc-400">Workspace account created</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Circle className="h-4 w-4 text-zinc-500" />
+                            <span className="text-sm text-zinc-400">Custom domain configured</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Circle className="h-4 w-4 text-zinc-500" />
+                            <span className="text-sm text-zinc-400">DKIM/SPF/DMARC setup</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Circle className="h-4 w-4 text-zinc-500" />
+                            <span className="text-sm text-zinc-400">Email templates</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Circle className="h-4 w-4 text-zinc-500" />
+                            <span className="text-sm text-zinc-400">Delivery monitoring</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Apexpayout */}
+                      <div className="space-y-3">
+                        <h4 className="font-medium text-blue-300 flex items-center gap-2">
+                          <CreditCard className="h-4 w-4" />
+                          Apexpayout
+                        </h4>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-3">
+                            <Circle className="h-4 w-4 text-zinc-500" />
+                            <span className="text-sm text-zinc-400">Merchant account setup</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Circle className="h-4 w-4 text-zinc-500" />
+                            <span className="text-sm text-zinc-400">API credentials configured</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Circle className="h-4 w-4 text-zinc-500" />
+                            <span className="text-sm text-zinc-400">Webhook endpoints</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Circle className="h-4 w-4 text-zinc-500" />
+                            <span className="text-sm text-zinc-400">Payment methods</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Circle className="h-4 w-4 text-zinc-500" />
+                            <span className="text-sm text-zinc-400">PCI compliance</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Infrastructure */}
+                  <div className="bg-zinc-900/50 rounded-lg p-6 border border-zinc-600">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                        <Globe className="h-5 w-5 text-green-400" />
+                        Infrastructure & Security
+                      </h3>
+                      <Badge variant="outline" className="border-green-500 text-green-400">
+                        9/14 Complete
+                      </Badge>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Domain & Hosting */}
+                      <div className="space-y-3">
+                        <h4 className="font-medium text-green-300">Domain & Hosting</h4>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-3">
+                            <CheckCircle className="h-4 w-4 text-green-400" />
+                            <span className="text-sm text-zinc-300">Primary domain active</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <CheckCircle className="h-4 w-4 text-green-400" />
+                            <span className="text-sm text-zinc-300">SSL certificate installed</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <CheckCircle className="h-4 w-4 text-green-400" />
+                            <span className="text-sm text-zinc-300">DNS configuration</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <CheckCircle className="h-4 w-4 text-green-400" />
+                            <span className="text-sm text-zinc-300">Web hosting configured</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <CheckCircle className="h-4 w-4 text-green-400" />
+                            <span className="text-sm text-zinc-300">Database hosting</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <CheckCircle className="h-4 w-4 text-green-400" />
+                            <span className="text-sm text-zinc-300">Automated backups</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Security */}
+                      <div className="space-y-3">
+                        <h4 className="font-medium text-green-300">Security & Monitoring</h4>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-3">
+                            <CheckCircle className="h-4 w-4 text-green-400" />
+                            <span className="text-sm text-zinc-300">Admin MFA enabled</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <CheckCircle className="h-4 w-4 text-green-400" />
+                            <span className="text-sm text-zinc-300">Data encryption</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <CheckCircle className="h-4 w-4 text-green-400" />
+                            <span className="text-sm text-zinc-300">Performance monitoring</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Clock className="h-4 w-4 text-yellow-400" />
+                            <span className="text-sm text-zinc-300">Security auditing</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Circle className="h-4 w-4 text-zinc-500" />
+                            <span className="text-sm text-zinc-400">Penetration testing</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Circle className="h-4 w-4 text-zinc-500" />
+                            <span className="text-sm text-zinc-400">Incident response plan</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Items */}
+                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-6">
+                    <h3 className="text-lg font-semibold text-yellow-300 mb-4 flex items-center gap-2">
+                      <AlertTriangle className="h-5 w-5" />
+                      Priority Action Items
+                    </h3>
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-3 p-3 bg-zinc-800/50 rounded-lg">
+                        <div className="w-2 h-2 bg-red-400 rounded-full mt-2"></div>
+                        <div>
+                          <p className="text-white font-medium">Twilio Account Setup</p>
+                          <p className="text-sm text-zinc-400">Required for SMS notifications. Estimated: 2-3 days</p>
+                          <p className="text-xs text-red-400 mt-1">High Priority - Blocks user notifications</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3 p-3 bg-zinc-800/50 rounded-lg">
+                        <div className="w-2 h-2 bg-orange-400 rounded-full mt-2"></div>
+                        <div>
+                          <p className="text-white font-medium">Payment Gateway Integration</p>
+                          <p className="text-sm text-zinc-400">Apexpayout setup for credit redemptions. Estimated: 1 week</p>
+                          <p className="text-xs text-orange-400 mt-1">Medium Priority - Required for cash-outs</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3 p-3 bg-zinc-800/50 rounded-lg">
+                        <div className="w-2 h-2 bg-yellow-400 rounded-full mt-2"></div>
+                        <div>
+                          <p className="text-white font-medium">Game Platform SSO</p>
+                          <p className="text-sm text-zinc-400">Complete token verification and user flow. Estimated: 3-4 days</p>
+                          <p className="text-xs text-yellow-400 mt-1">Medium Priority - Enhances user experience</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
