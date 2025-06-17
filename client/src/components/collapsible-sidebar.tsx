@@ -4,12 +4,13 @@ import {
   Gamepad2, 
   Home, 
   User as UserIcon, 
-  History, 
+  Clock, 
   LogOut,
   Menu,
   X
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface CollapsibleSidebarProps {
   onLogout: () => void;
@@ -18,6 +19,7 @@ interface CollapsibleSidebarProps {
 export default function CollapsibleSidebar({ onLogout }: CollapsibleSidebarProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [location] = useLocation();
+  const { t } = useLanguage();
 
   const isActive = (path: string) => location === path;
 
@@ -62,7 +64,7 @@ export default function CollapsibleSidebar({ onLogout }: CollapsibleSidebarProps
                 isActive('/') ? 'bg-zinc-700/30 text-white' : 'text-gray-300'
               } ${sidebarCollapsed ? 'lg:justify-center lg:px-2 lg:py-3 px-4 py-3' : 'space-x-3 px-4 py-3'}`}>
                 <Home className="h-5 w-5" />
-                {!sidebarCollapsed && <span className="lg:block">Dashboard</span>}
+                {!sidebarCollapsed && <span className="lg:block">{t('nav.dashboard')}</span>}
               </a>
             </Link>
             
@@ -71,7 +73,7 @@ export default function CollapsibleSidebar({ onLogout }: CollapsibleSidebarProps
                 isActive('/profile') ? 'bg-zinc-700/30 text-white' : 'text-gray-300'
               } ${sidebarCollapsed ? 'lg:justify-center lg:px-2 lg:py-3 px-4 py-3' : 'space-x-3 px-4 py-3'}`}>
                 <UserIcon className="h-5 w-5" />
-                {!sidebarCollapsed && <span className="lg:block">Profile</span>}
+                {!sidebarCollapsed && <span className="lg:block">{t('nav.profile')}</span>}
               </a>
             </Link>
             
@@ -80,7 +82,7 @@ export default function CollapsibleSidebar({ onLogout }: CollapsibleSidebarProps
                 isActive('/games') ? 'bg-zinc-700/30 text-white' : 'text-gray-300'
               } ${sidebarCollapsed ? 'lg:justify-center lg:px-2 lg:py-3 px-4 py-3' : 'space-x-3 px-4 py-3'}`}>
                 <Gamepad2 className="h-5 w-5" />
-                {!sidebarCollapsed && <span className="lg:block">Games</span>}
+                {!sidebarCollapsed && <span className="lg:block">{t('nav.games')}</span>}
               </a>
             </Link>
             
@@ -88,8 +90,8 @@ export default function CollapsibleSidebar({ onLogout }: CollapsibleSidebarProps
               <a className={`flex items-center rounded-lg hover:bg-zinc-700/50 hover:text-white transition-colors ${
                 isActive('/transactions') ? 'bg-zinc-700/30 text-white' : 'text-gray-300'
               } ${sidebarCollapsed ? 'lg:justify-center lg:px-2 lg:py-3 px-4 py-3' : 'space-x-3 px-4 py-3'}`}>
-                <History className="h-5 w-5" />
-                {!sidebarCollapsed && <span className="lg:block">Transaction History</span>}
+                <Clock className="h-5 w-5" />
+                {!sidebarCollapsed && <span className="lg:block">{t('nav.transactions')}</span>}
               </a>
             </Link>
             
@@ -100,7 +102,7 @@ export default function CollapsibleSidebar({ onLogout }: CollapsibleSidebarProps
               }`}
             >
               <LogOut className="h-5 w-5" />
-              {!sidebarCollapsed && <span className="lg:block">Logout</span>}
+              {!sidebarCollapsed && <span className="lg:block">{t('nav.logout')}</span>}
             </button>
           </nav>
         </div>
