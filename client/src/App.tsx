@@ -31,21 +31,23 @@ function Router() {
 
   return (
     <Switch>
-      {!isAuthenticated ? (
-        <>
-          <Route path="/" component={Landing} />
-          <Route path="/login" component={Login} />
-          <Route path="/register" component={Register} />
-          <Route path="/forgot-password" component={ForgotPassword} />
-          <Route path="/reset-password" component={ResetPassword} />
-          <Route path="/admin-login" component={AdminLogin} />
-        </>
-      ) : isAdmin ? (
+      {/* Public routes - available when not authenticated */}
+      <Route path="/login" component={Login} />
+      <Route path="/register" component={Register} />
+      <Route path="/forgot-password" component={ForgotPassword} />
+      <Route path="/reset-password" component={ResetPassword} />
+      <Route path="/admin-login" component={AdminLogin} />
+      
+      {/* Admin routes */}
+      {isAdmin && (
         <>
           <Route path="/" component={AdminDashboard} />
           <Route path="/admin" component={AdminDashboard} />
         </>
-      ) : (
+      )}
+      
+      {/* Authenticated user routes */}
+      {isAuthenticated && !isAdmin && (
         <>
           <Route path="/" component={Dashboard} />
           <Route path="/profile" component={Profile} />
@@ -53,6 +55,11 @@ function Router() {
           <Route path="/transactions" component={Transactions} />
         </>
       )}
+      
+      {/* Landing page for unauthenticated users */}
+      {!isAuthenticated && <Route path="/" component={Landing} />}
+      
+      {/* 404 fallback */}
       <Route component={NotFound} />
     </Switch>
   );
