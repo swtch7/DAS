@@ -33,6 +33,7 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 export default function Profile() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { language, setLanguage, t } = useLanguage();
 
   // Fetch user data
   const { data: userData, isLoading: userLoading } = useQuery<User>({
@@ -99,9 +100,9 @@ export default function Profile() {
         <main className="flex-1 p-8 pt-20 lg:pt-8">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-4xl font-bold text-white mb-4">Profile Settings</h1>
+            <h1 className="text-4xl font-bold text-white mb-4">{t('profile.title')}</h1>
             <p className="text-gray-400 text-lg">
-              Manage your account information and preferences
+              {t('profile.subtitle')}
             </p>
           </div>
 
@@ -110,7 +111,7 @@ export default function Profile() {
             <CardHeader>
               <CardTitle className="text-white flex items-center space-x-2">
                 <UserCircle className="h-5 w-5" />
-                <span>Account Information</span>
+                <span>{t('profile.personalInfo')}</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -118,7 +119,7 @@ export default function Profile() {
                 <div className="space-y-2">
                   <Label className="text-gray-300 flex items-center space-x-2">
                     <Mail className="h-4 w-4" />
-                    <span>Email</span>
+                    <span>{t('profile.email')}</span>
                   </Label>
                   <Input
                     value={userData?.email || ""}
@@ -128,7 +129,7 @@ export default function Profile() {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label className="text-gray-300">First Name</Label>
+                  <Label className="text-gray-300">{t('profile.firstName')}</Label>
                   <Input
                     value={userData?.firstName || ""}
                     disabled
@@ -137,7 +138,7 @@ export default function Profile() {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label className="text-gray-300">Last Name</Label>
+                  <Label className="text-gray-300">{t('profile.lastName')}</Label>
                   <Input
                     value={userData?.lastName || ""}
                     disabled
@@ -146,12 +147,32 @@ export default function Profile() {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label className="text-gray-300">Credits</Label>
+                  <Label className="text-gray-300">{t('dashboard.credits')}</Label>
                   <Input
                     value={userData?.credits?.toLocaleString() || "0"}
                     disabled
                     className="bg-zinc-700 border-zinc-600 text-gray-300"
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-gray-300 flex items-center space-x-2">
+                    <Globe className="h-4 w-4" />
+                    <span>{t('profile.language')}</span>
+                  </Label>
+                  <Select value={language} onValueChange={setLanguage}>
+                    <SelectTrigger className="bg-zinc-700 border-zinc-600 text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-zinc-700 border-zinc-600">
+                      <SelectItem value="en" className="text-white hover:bg-zinc-600">
+                        {t('profile.english')}
+                      </SelectItem>
+                      <SelectItem value="es" className="text-white hover:bg-zinc-600">
+                        {t('profile.spanish')}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </CardContent>
