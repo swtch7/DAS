@@ -1,5 +1,5 @@
 // Polyfill for import.meta.dirname in production
-import "./polyfill";
+import "./dirname-fix";
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
