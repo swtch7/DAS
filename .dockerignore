@@ -1,0 +1,17 @@
+node_modules
+.env
+.env.local
+.git
+.gitignore
+README.md
+Dockerfile
+.dockerignore
+attached_assets
+.replit
+.config
+.upm
+replit.nix
+cookies.txt
+*.log
+.vite
+dist/beacon

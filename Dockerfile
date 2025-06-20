@@ -12,8 +12,8 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Build the application with Railway-specific build script
-RUN node build-railway.js
+# Build the application with direct Railway fix
+RUN node railway-fix.js
 
 # Remove dev dependencies after build
 RUN npm ci --only=production && npm cache clean --force

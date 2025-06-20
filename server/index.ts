@@ -1,16 +1,4 @@
-// Production dirname fix - only needed for bundled environments
-if (typeof globalThis.__getProperDirname === 'undefined') {
-  const { fileURLToPath } = await import('url');
-  const { dirname } = await import('path');
-  
-  globalThis.__getProperDirname = function() {
-    try {
-      return dirname(fileURLToPath(import.meta.url));
-    } catch (e) {
-      return process.cwd();
-    }
-  };
-}
+// Keep original imports clean for Railway deployment
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
