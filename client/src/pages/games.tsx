@@ -12,11 +12,10 @@ import {
 } from "lucide-react";
 import CollapsibleSidebar from "@/components/collapsible-sidebar";
 // Using asset imports for game images
-import magicCityImage from "@assets/Magic City_1750085095287.png";
-import ultraPandaImage from "@assets/Ultra Panda_1750085098231.png";
-
-// Using existing Golden Dragon image path
-const goldenDragonImage = "/attached_assets/golden%20dragon_1749824618883.png";
+// Using images from public directory for deployment compatibility
+const magicCityImage = "/images/magic-city.png";
+const ultraPandaImage = "/images/ultra-panda.png";
+const goldenDragonImage = "/images/golden-dragon.png";
 
 export default function Games() {
   const { user } = useAuth();

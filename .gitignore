@@ -97,6 +97,8 @@ replit.nix
 
 # Attached assets (if they contain sensitive data)
 attached_assets/
+# But keep the public images for deployment
+!client/public/
 
 # Cookies and session data
 cookies.txt
